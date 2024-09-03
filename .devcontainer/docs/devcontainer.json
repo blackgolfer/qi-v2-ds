@@ -1,0 +1,33 @@
+{
+	"name": "docs dev",
+	"dockerComposeFile": [
+		"../docker-compose.yml"
+	],
+	"service": "docs",
+	"shutdownAction": "none",
+	"remoteEnv": {
+		"LOCALWSF": "${localWorkspaceFolder}",
+		"CONTAINERWSF": "${containerWorkspaceFolder}"
+	},
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/zsh",
+		"editor.tabSize": 2,
+		"markdown-preview-enhanced.plantumlServer": "http://plantuml:8080/svg/",
+		"markdown-preview-enhanced.previewTheme": "atom-light.css",
+		"markdown-preview-enhanced.puppeteerArgs": [
+			"--no-sandbox"
+		],
+		"plantuml.server": "http://plantuml:8080",
+		"plantuml.render": "PlantUMLServer"
+	},
+	"extensions": [
+		"shd101wyy.markdown-preview-enhanced",
+		"jebbs.plantuml",
+		"streetsidesoftware.code-spell-checker",
+		"codezombiech.gitignore",
+		"donjayamanne.git-extension-pack",
+		"tintinweb.graphviz-interactive-preview"
+	],
+	"workspaceFolder": "/home/${localEnv:USER}/docs",
+  "remoteUser": "${localEnv:USER}"
+}

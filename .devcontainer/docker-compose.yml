@@ -1,0 +1,137 @@
+services:
+  data_stream:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - USERNAME=${USERNAME}
+        - USER_UID=${UID}
+        - USER_GID=${GID}
+        - VERSSION=${VERSION}
+        - REGISTRY=${REGISTRY}
+    image: qi/data-stream-dev-container:${VERSION}
+    container_name: data-stream-dev-container
+    hostname: data-stream-dev.local
+    working_dir: /home/${USERNAME}/data_stream
+    ports:
+      - 3001:3001
+    volumes:
+      - ../:/workspace:cached
+      - ../ds:/home/${USERNAME}/data_stream:cached
+      # Allow AWS CLI and other tools to read an AWS profile
+      #- ~/.aws:/home/node/.aws
+    command: sleep infinity
+
+  simulator:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - USERNAME=${USERNAME}
+        - USER_UID=${UID}
+        - USER_GID=${GID}
+        - VERSION=${VERSION}
+        - REGISTRY=${REGISTRY}
+    image: qi/simulator-dev-container:${VERSION}
+    container_name: simulator-dev-container
+    hostname: simulator-dev.local
+    working_dir: /home/${USERNAME}/simulator
+    ports:
+      - 3002:3002
+    volumes:
+      - ../:/workspace:cached
+      - ../simulator:/home/${USERNAME}/simulator:cached
+    command: sleep infinity
+
+  charts:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - USERNAME=${USERNAME}
+        - USER_UID=${UID}
+        - USER_GID=${GID}
+        - VERSION=${VERSION}
+        - REGISTRY=${REGISTRY}
+    image: qi/charts-dev-container:${VERSION}
+    container_name: charts-dev-container
+    hostname: charts-dev.local
+    working_dir: /home/${USERNAME}/charts
+    ports:
+      - 3003:3003
+    volumes:
+      - ../:/workspace:cached
+      - ../charts:/home/${USERNAME}/charts:cached
+    command: sleep infinity
+
+  models:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - USERNAME=${USERNAME}
+        - USER_UID=${UID}
+        - USER_GID=${GID}
+        - VERSION=${VERSION}
+        - REGISTRY=${REGISTRY}
+    image: qi/models-dev-container:${VERSION}
+    container_name: models-dev-container
+    hostname: models-dev.local
+    working_dir: /home/${USERNAME}/models
+    ports:
+      - 3004:3004
+    volumes:
+      - ../:/workspace:cached
+      - ../models:/home/${USERNAME}/models:cached
+    command: sleep infinity
+
+  docs:
+    build:
+      context: .
+      dockerfile: ./dockerfile.doc
+      args:
+        - USERNAME=${USERNAME}
+        - USER_UID=${UID}
+        - USER_GID=${GID}
+        - VERSION=${VERSION}
+        - REGISTRY=${REGISTRY}
+    image: qi/docs-dev-container:${VERSION}
+    container_name: docs-dev-container
+    hostname: docs-dev.local
+    ports:
+      - 3005:3005
+    working_dir: /home/${USERNAME}/docs
+    init: true
+    user: "${USERNAME}"
+    volumes:
+      - ../:/workspace:cached
+      - ../docs:/home/${USERNAME}/docs:cached
+    links:
+      - "plantuml:plantuml"
+    command: sleep infinity
+
+  learning:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - USERNAME=${USERNAME}
+        - USER_UID=${UID}
+        - USER_GID=${GID}
+        - VERSSION=${VERSION}
+        - REGISTRY=${REGISTRY}
+    image: qi/learning-dev-container:${VERSION}
+    container_name: learning-dev-container
+    hostname: learning-dev.local
+    working_dir: /home/${USERNAME}/learning
+    ports:
+      - 3006:3006
+    volumes:
+      - ../:/workspace:cached
+      - ../learning:/home/${USERNAME}/learning:cached
+    command: sleep infinity
+
+  plantuml: 
+    image: plantuml/plantuml-server:latest
+    ports:
+      - "8080:8080"
