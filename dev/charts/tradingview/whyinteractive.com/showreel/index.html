@@ -1,0 +1,264 @@
+<!doctype html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>QUANTITATIVE INVESTMENT | Market Visualization</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="keywords" content="candlestick,kline,chart,technical analysis, market model, account management, trading" />
+	<meta name="description" content="This is market visualization for our qi-v2 system">
+	<!--meta name="copyright" content="(C) WHY INTERACTIVE ALL RIGHTS RESERVED."-->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!--meta http-equiv="X-UA-Compatible" content="chrome=1"-->
+    <meta name="viewport" content="width:980px;initial-scale=1.0; maximum-scale=1.0">
+    <link rel="image_src" href="http://whyinteractive.com/showreel/preview_v2.jpg" />
+    <link href="css/main.css" type="text/css" rel="stylesheet">
+	<script type="text/javascript">
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-858038-6']);
+	  _gaq.push(['_trackPageview']);
+	
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+	</script>
+    <!--script  type="text/javascript" src="scripts/swfobject.js"></script-->
+    <script type="text/javascript" src="scripts/jquery-1.6.4.min.js"></script>
+    <script type="text/javascript" src="scripts/script-1.2-min.js"></script>
+	<script type="text/javascript" src="scripts/jquery.scrollTo-1.4.2-min.js"></script>
+	<script type="text/javascript" src="scripts/jquery.timers-1.1.2-min.js"></script>
+	<script type="text/javascript" src="scripts/jquery.tools.min.js"></script>
+</head>
+<body>
+	<!--div id="debug">debug:</div-->
+    <div id="loader">loading…</div>
+	<div class="mainNavGroup" id="home">
+    		<div id="whyLogo" style="width:153px;cursor:pointer;" onclick="javascript:goSection('home');"><img src="images/whyLogo.png"></div>
+    		<div id="menuHolder">
+    		<div id="menuHL"></div>
+    		<div id="mainmenu">
+    		<ul>
+	    		<li id="m1"><a href="javascript:goSection('home');" id="bhome">Home</a></li>
+	    		<li id="m2"><a href="javascript:goSection('y10');" id="by10">Yahoo! 10th Anniversary</a></li>
+	    		<li id="m3"><a href="javascript:goSection('ysm');"  id="bysm">Yahoo! Searchmen 2</a></li>
+	    		<li id="m4"><a href="javascript:goSection('ysearch');"  id="bysearch">Yahoo! Hong Kong Search</a></li>
+	    		<li id="m5"><a href="javascript:goSection('ybuzz');"  id="bybuzz">Yahoo! Buzz Awards</a></li>
+	    		<li id="m6"><a href="javascript:goSection('jockey');"  id="bjockey">Jockey Underwear</a></li>
+	    		<li id="m7"><a href="javascript:goSection('comic');"  id="bcomic">Hong Kong Comic Online Exhibition</a></li>
+	    		
+	    		<li id="m8"><a href="javascript:goSection('geopark');"  id="bgeopark">Geopark - Earthmembers</a></li>
+	    		<li id="m9"><a href="javascript:goSection('musicbattle');"  id="bmusicbattle">tvb.com - Music Battle</a></li>
+	    		<li id="m10"><a href="javascript:goSection('arena');"  id="barena">Arena Hong Kong</a></li>
+				<li id="m11"><a href="javascript:goSection('team');"  id="bteam">Our Team</a></li>
+				<li id="m12"><a href="javascript:goSection('more');"  id="bmore"></a></li>
+    		</ul>
+    		</div>
+    		</div>
+    </div>
+    <div id="up"><img src="images/btnUp.png"></div>
+    <div id="down"><img src="images/btnDown.png"></div>
+    <div id="bigwrapper">
+    <div id="wrapper">
+             <div class="home addpad" style="margin-left:165px;">
+             	<div id="home2" style="width:1px;height:600px;"></div>
+             	<div style="position:absolute;z-index:2;top:0px;left:0px;">
+             		<img src="images/frame1_layer2.png">
+             	</div>
+             	<div id="home1" style="position:absolute;z-index:1;top:0px;left:-100px;">
+    				<img src="images/frame1_layer1.png" style="padding-bottom:200px;">
+    		    </div>
+    	     </div>
+             
+             <div id="y10" class="y10 addpad" style="height:700px;">
+	             <div id="y102" style="position:absolute;top:250px;left:800px;z-index:103;pointer-events:none;">
+	             <img src="images/frame2_layer3.png">
+	             </div>
+	             <div style="position:absolute;top:-50px;background:url(images/frame2_layer2.png) no-repeat;width:100%;height:700px;z-index:102;padding-top:80px;">
+		              <div id="y10holder" style="position:relative;width:100%;height:620px;">
+		              		<div style="margin-top:250px;">
+		              			<img src="images/frame2_layer2_backupchain.png" style="border:0px;">
+		              		</div>
+		              		<div style="position:absolute;top:260px;left:450px;" onMouseOver="javascript:loadswf('y10');"  class="hideswf">
+		              			<img src="images/y10_join.png" style="border:0px;">
+		              		</div>
+		              </div>
+	             </div>
+	    		<div  id="y101" style="position:absolute;top:80px;left:110px;z-index:101;">
+	    			<img src="images/frame2_layer1.png">
+	    		</div>
+             </div>
+             
+             <div id="ysm" class="ysm addpadd" style="position:relative;height:895px;">
+	             <div style="position:absolute;top:0px;left:-100px;z-index:203;width:100%;">
+		             <div id="ysmholder" class="nooutline">
+				 		<div style="position:absolute;top:215px;left:250px;" onMouseOver="javascript:loadswf('ysm');">
+					 			<img src="images/ysm_backup.png" style="border:0px;">
+				 		</div>
+					  </div>
+				  </div>
+	              <div id="ysmbottom"></div>
+	              <div id="ysm1" style="position:absolute;top:50px;padding-left:40px;z-index:201;">
+    				<img src="images/frame3_layer1.png">
+    			  </div>
+             </div>
+             
+			 <div id="ysearch" class="ysearch" style="width:100%;height:1000px;border-bottom:10px solid #000;">
+			 <div id="ystop" style="position:absolute;background:#000 url(images/ysearch_top.jpg) 500px 0px no-repeat;width:100%;height:1000px;top:0px;left:0px;"></div>
+			 <div style="position:relative;width:100%;height:100%;background:url(images/ysearch_bg.jpg);text-align:center;" id="ysearchswf">
+			 		<div style="position:absolute;top:35%;left:0px;width:100%;text-align:center;" id="ys1">
+				 		<a href="javascript:loadswf('ysearch');">
+				 		<img src="images/ysearch_backup.png" style="border:0px;">
+				 		</a>
+			 		</div>
+			 </div>
+			 </div>
+			 
+             <div id="ybuzz" class="ybuzz" style="background:#000;">
+             	 <div id="bz1" style="position:absolute;top:-100px;right:-100px;z-index:401;">
+             		<img src="images/frame5_dot1.png">
+             	 </div>
+             	 <div id="bz2" style="position:absolute;top:130px;left:100px;z-index:402;">
+             		<img src="images/frame5_dot2.png">
+             	 </div>
+             	  <div id="bz3" style="position:absolute;top:500px;left:200px;z-index:402;">
+             		<img src="images/frame5_dot3.png">
+             	 </div>
+	             <div id="ybuzzholder" style="overflow:hidden;">
+	             	<div style="position:absolute;top:490px;right:10%;height:70px;overflow:hidden;" onMouseOver="javascript:loadswf('buzz');"  class="hideswf">
+		              			<img src="images/try_buzz.png" style="border:0px;">
+		            </div>
+	             	<img src="images/buzz_backup.jpg" width="100%" style="border:0px;">
+	             </div>
+	             <div style="width:120%;height:200px;background:#000;"></div>
+              </div>
+             
+             <div class="jockey" id="jockey" style="background:#000;">
+				<div id="jstop" style="position:absolute;background:#000 url(images/frame7_bk.jpg) 50px 0px no-repeat;width:100%;height:200px;top:-200px;left:0px;z-index:604;"></div>
+				<div id="joc1" style="position:absolute;top:450px;left:100px;z-index:602;pointer-events:none;">
+             		<img src="images/frame7_layer3_dot1.png">
+             	</div>
+             	<div id="joc2" style="position:absolute;top:650px;right:100px;z-index:603;pointer-events:none;">
+             		<img src="images/frame7_layer3_dot2.png">
+             	</div>
+	             <div class="addpad" style="position:relative;width:100%;height:600px;" id="jimage">
+				        <div id="joc3" style="position:absolute;top:228px;left:30%;z-index:601;pointer-events:none;">
+		             		<div><img src="images/frame7_layer2_boys.png"></div>
+		             	</div>
+		             	<div id="jothers" style="position:absolute;top:400px;left:1200px;">
+			             	<div style="z-index:600;cursor:pointer;width:150px;height:80px;" id="jockeybtn">
+					           <div><img src="images/tryJockey.png"></div>
+					           <div style="position:relative;color:#fff;font-size:7px;font-family:arial;text-align:center;width:50px;height:15px;color:#fff;" id="jcount"></div>
+					           <div style="padding-top:100px;padding-left:0px;width:100px;font-size:9px;font-family:arial;text-align:center;color:#969696;"><div style="float:left;">total clicks:</div><div id="jtotalclick" style="float:left;"></div>
+					           <div style="clear:left;"></div>
+					           </div>
+					        </div>
+				        </div>
+		             	<div>
+		             	<img src="images/frame7_layer2.jpg">
+		             	</div>
+             	</div>
+             	<div style="width:120%;height:200px;background:#000;"></div>
+             </div>
+             
+             <div class="comic" id="comic" style="background:url(images/frame6_bg.jpg) top center no-repeat;">
+				<div id="cstop" style="position:absolute;background:#000 url(images/frame8_bk.jpg) 500px 0px no-repeat;width:100%;height:200px;top:-200px;left:0px;z-index:703;"></div>
+             	<div id="com1" style="position:absolute;top:300px;left:-50px;z-index:701;">
+             		<img src="images/frame6_dot1.png">
+             	</div>
+             	<div id="com2" style="position:absolute;top:500px;right:100px;z-index:702;">
+             		<img src="images/frame6_dot2.png">
+             	</div>
+             	<div style="width:100%;height:1000px;text-align:center;z-index:700;" id="hkacholder">
+             		<div style="position:absolute;top:150px;left:300px;height:70px;overflow:hidden;" onMouseOver="javascript:loadswf('hkac');"  class="hideswf">
+		              			<img src="images/y10_join.png" style="border:0px;">
+		            </div>
+             		<img src="images/frame6_layer2.jpg">
+             	</div>
+             </div>
+             
+             <div class="geopark addpad" id="geopark" style="height:700px;">
+             	<div id="g3" style="position:absolute;top:200px;left:700px;z-index:803;">
+             		<img src="images/frame8_layer3_dot2.png">
+             	</div>
+             	<div id="g0" style="position:absolute;top:100px;left:-100px;z-index:800;">
+             		<img src="images/frame8_layer3_dot1.png">
+             	</div>
+             	<div id="g2" style="position:absolute;top:150px;left:100px;z-index:802;">
+             		<img src="images/frame8_layer2.gif">
+             	</div>
+             	<div id="g1"  style="position:absolute;top:-350px;left:350px;z-index:801;">
+             		<img src="images/frame8_layer1.png">
+             	</div>
+             </div>
+             
+             <div class="musicbattle addpad" id="musicbattle" style="height:800px;">
+                <div id="mb4" style="position:absolute;top:150px;left:-130px;z-index:904;">
+             		<img src="images/frame9_layer1_dot1.png">
+             	</div>
+             	<div id="mb5" style="position:absolute;top:350px;left:850px;z-index:905;">
+             		<img src="images/frame9_layer1_dot2.png">
+             	</div>                 
+                <div id="mb3" style="position:absolute;top:50px;left:400px;z-index:901;width:456px;margin-top:0px;">
+             		<img src="images/frame9_layer1.png" width="100%">
+             	</div>
+             	<div id="mb2" style="position:absolute;top:-50px;padding-left:50px;z-index:902;width:940px;margin-top:0px;">
+             		<img src="images/frame9_layer2.png" width="100%">
+             	</div>
+                <div id="mb1" style="position:absolute;top:50px;left:0px;z-index:903;width:940px;margin-top:0px;">
+             		<img src="images/frame9_layer3.png" width="100%">
+             	</div>
+             </div>
+             
+             <div class="arena addpad" id="arena" style="height:700px;">
+             	<div id="arena1" style="position:absolute;top:50px;left:230px;z-index:1003;pointer-events:none;">
+             		<img src="images/frame10_layer3.png" style="pointer-events:none;">
+             	</div>
+             	<div  id="arena2"  style="position:absolute;top:170px;left:700px;z-index:1001;height:199px;">
+             		<img src="images/frame10_layer1.png">
+             	</div>
+             	<div style="position:absolute;top:170px;left:0px;z-index:1002;">
+             		<img src="images/frame10_layer2.png">
+             	</div>
+
+             </div>
+             <div class="team addpad" id="team" style="padding-left:10px;height:1900px;">
+            		<div style="position:absolute;top:1845px;left:400px;width:200px;height:20px;z-index:1104;cursor:pointer;" onClick="javascript:window.open('http://whyinteractive.com');"></div>
+             		<div style="position:absolute;top:1870px;left:390px;width:400px;height:50px;z-index:1103;" id="share">
+							<div><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwhyinteractive.com%2Fshowreel%2F&amp;send=false&amp;layout=button_count&amp;width=200&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21&amp;appId=109881142406508" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:200px; height:21px;" allowTransparency="true"></iframe></div>
+							<div style="padding-left:8px;width:105px;"><a href="https://twitter.com/share" class="twitter-share-button" data-url="http://whyinteractive.com/showreel/" data-count="horizontal" data-via="whyinteractive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+							<!-- Place this tag in your head or just before your close body tag -->
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+<!-- Place this tag where you want the +1 button to render -->
+<div class="g-plusone" data-size="medium" data-href="http://whyinteractive.com/showreel/"></div>
+							
+					</div>
+             		<div style="clear:both;"></div>
+             		<img src="images/frame11_layer2.png">
+             		
+             </div>
+             <div id="more">
+             &nbsp;
+             </div>
+       	</div>
+    </div>
+<style type="text/css">
+#awwwards{
+position:absolute;
+top:40%;
+right:0px;
+z-index:555;
+}
+#awwwards a{
+width:69px;
+height:105px;
+text-indent:-8000px;
+display:block;
+background:url(awwwards_siteoftheday_b_right.png) no-repeat;
+overflow:hidden;
+}
+</style>
+<div id="awwwards"><a href="http://www.awwwards.com/" target="_blank">best websites</a></div>
+</body>
+</html>
+

@@ -1,0 +1,95 @@
+services:  
+  questdb:
+    user: root
+    image: questdb/questdb:latest
+    hostname: questdb
+    container_name: questdb
+    ports:
+      - 0.0.0.0:9000:9000
+      - 0.0.0.0:9009:9009
+      - 0.0.0.0:8812:8812
+    #extra_hosts:
+    #  - "host.docker.internal:host-gateway"
+    networks:
+      - qi_db_network
+    volumes:
+      - questdb_volume:/var/lib/questdb
+      #- ./questdb:/var/lib/questdb
+    env_file:
+      - .env
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    hostname: grafana
+    container_name: grafana
+    networks:
+      - qi_db_network
+    ports:
+      - 0.0.0.0:3000:3000
+    volumes:
+      - grafana_volume:/var/lib/grafana
+    #extra_hosts:
+    #  - "host.docker.internal:host-gateway"
+    #network_mode: host
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    hostname: timescaledb
+    container_name: timescaledb
+    #restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - type: volume
+        source: timescale_volume # the volume name
+        target: /var/lib/postgresql/data # the location in the container where the data is stored
+        read_only: false
+    ports:
+      - 5432:5432
+    networks:
+      - qi_db_network
+
+  # PGAdmin for administering the TimescaleDB/PostgreSQL database with SQL
+  pgadmin:
+    image: dpage/pgadmin4:8.11.0
+    hostname: pgadmin
+    container_name: pgadmin
+    #restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PGADMIN_LISTEN_PORT: 8000
+    ports:
+      # Use 0.0.0.0 to make this DB admin app accessible from "http://localhost:8000"
+      - 8000:8000
+    volumes:
+      # So the database server settings get saved and stored even if the container is replaced or deleted
+      - pgadmin_volume:/var/lib/pgadmin
+    networks:
+      - qi_db_network
+
+networks:
+  qi_db_network:
+    driver: bridge
+    name: qi_db
+
+volumes:
+  questdb_volume:
+      #driver: local # Define the driver and options under the volume name
+      #driver_opts:
+      #  type: none
+      #  device: ./questdb
+      #  o: bind
+  timescale_volume:
+      #driver: local # Define the driver and options under the volume name
+      #driver_opts:
+      #  type: none
+      #  device: ./timescaledb
+      #  o: bind
+  pgadmin_volume:
+      #driver: local # Define the driver and options under the volume name
+      #driver_opts:
+      #  type: none
+      #  device: ./pgadmin
+      #  o: bind
+  grafana_volume:

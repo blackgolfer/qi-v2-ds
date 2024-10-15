@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Geometry - Apollonian Gasket</title>
+    <meta
+      name="google-site-verification"
+      content="arjr-t3pBgitCNG_q5A1J08KBvMkzOjSPAaaUmEegTw"
+    />
+    <meta charset="UTF-8" />
+    <meta name="keywords" content="geometry, geogebra" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="./css/main05.min.css" type="text/css" />
+
+    <!-- Apple stuff-->
+    <link
+      rel="apple-touch-icon"
+      href="http://www.malinc.se/apple-touch-icon.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="72x72"
+      href="http://www.malinc.se/apple-touch-icon-72x72.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="114x114"
+      href="http://www.malinc.se/apple-touch-icon-114x114.png"
+    />
+    <link
+      rel="apple-touch-startup-image"
+      href="http://www.malinc.se/startup.png"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!--Google+ stuff -->
+    <link href="https://plus.google.com/116203071099093782712" rel="author" />
+    <!--Open graph stuff for Facebook and Google+-->
+    <meta property="og:title" content="Geometry - Apollonian Gasket" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="og:image"
+      content="http://www.malinc.se/math/geometry/images/thumbnails/apolloniangasket.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="1200" />
+    <meta property="og:site_name" content="Malin Christersson's Math Site" />
+    <meta
+      property="og:description"
+      content="An interactive Apollonian gasket and how to construct one."
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Raleway:400,600,700,900"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Source+Code+Pro"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+    <script>
+      WebFont.load({
+        google: {
+          families: ["Source Code Pro", "Raleway"],
+        },
+      });
+    </script>
+
+    <!-- Google Analytics -->
+    <script>
+      (function (i, s, o, g, r, a, m) {
+        i["GoogleAnalyticsObject"] = r;
+        (i[r] =
+          i[r] ||
+          function () {
+            (i[r].q = i[r].q || []).push(arguments);
+          }),
+          (i[r].l = 1 * new Date());
+        (a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]);
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m);
+      })(
+        window,
+        document,
+        "script",
+        "//www.google-analytics.com/analytics.js",
+        "ga"
+      );
+
+      ga("create", "UA-39523743-1", "auto");
+      ga("send", "pageview");
+    </script>
+    <!-- End Google Analytics -->
+  </head>
+  <body>
+    <div class="wrapper">
+      <!-- Menu toggle -->
+
+      <nav id="sidebar">
+        <div class="sidebar-header">
+          <p><a href="../">about</a></p>
+        </div>
+
+        <ul>
+          <li class="menu-item">
+            <a href="quadrilateralsen.php">Quadrilaterals &amp; Triangles</a>
+          </li>
+          <li class="menu-item">
+            <a href="tessellationen.php">Tessellations and Symmetries</a>
+          </li>
+          <li class="menu-item">
+            <a href="summaryanglesen.php">Summary - Angles</a>
+          </li>
+          <li class="menu-item">
+            <a href="pythagorasen.php">Pythagoras &amp; Thales</a>
+          </li>
+          <li class="menu-item">
+            <a href="sunearthmoonen.php">Sun, earth and moon</a>
+          </li>
+          <li class="menu-item">
+            <a href="similartrianglesen.php">Similar Triangles</a>
+          </li>
+          <li class="menu-item">
+            <a href="circles_angles_conjecturesen.php">Circles and Angles</a>
+          </li>
+          <li class="menu-item">
+            <a href="dothisen.php">Circumscribed and Inscribed Circles</a>
+          </li>
+          <li class="menu-item-selected">
+            <a href="apolloniangasketen.php">Apollonian Gasket</a>
+          </li>
+          <li class="menu-item">
+            <a href="rulerandcompassen.php">Ruler and Compass</a>
+          </li>
+        </ul>
+        <div class="sidebar-bottom">
+          Malin Christersson<br />
+          2019 <br />
+          <a href="https://malinchristersson.tumblr.com/"
+            >MalinC Math on tumblr</a
+          >
+          <br />
+          <a
+            rel="license"
+            href="http://creativecommons.org/licenses/by-nc-sa/4.0/"
+          >
+            <img
+              alt="Creative Commons-licens"
+              style="border-width: 0"
+              src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"
+          /></a>
+          <br />
+        </div>
+      </nav>
+
+      <div id="content">
+        <!-- Hamburger icon -->
+        <div class="container-fluid mb-2">
+          <div class="menuButton">
+            <div class="animated-icon">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="container-fluid">
+          <div class="content">
+            <section>
+              <h1>Apollonian Gasket</h1>
+
+              <figure>
+                <div id="container"></div>
+                <figcaption>
+                  Move the dots. <br />
+                  Drag the slider to see steps of the fractal. <br />
+                </figcaption>
+              </figure>
+              <script src="src/ApollonianGasket.min.js"></script>
+
+              <p>
+                Since angles are preserved under inversion in circle (see
+                <a
+                  href="http://www.malinc.se/noneuclidean/en/circleinversion.php"
+                  >Non-Euclidean Geometry &hyphen; Inversion in Circle</a
+                >), tangency is also preserved. Starting with five tangent
+                circles, you can make a pattern like the Apollonian gasket by
+                repeatedly invert in circles.
+              </p>
+
+              <p>
+                Start with five circles such that each circle is tangent to at
+                least three of the others (see
+                <a href="http://www.malinc.se/math/geometry/dothisen.php"
+                  >Geometry - Circumscribed and Inscribed Circles</a
+                >). There are six places where one can make a new circle (the
+                gray regions in the picture below). The new circle should be
+                tangent to three of the original circles. For each such new
+                circle there will be three new regions where one can make new
+                circles. The process can be repeated.
+              </p>
+              <figure class="innercenter">
+                <img
+                  src="images/gasket0.png"
+                  alt="image"
+                  width="600"
+                  height="300"
+                />
+                <figcaption>
+                  Five Soddy circles. The largest circle and the smallest circle
+                  are each other reflections in the yellow circle.
+                </figcaption>
+              </figure>
+              <p>
+                Repeating the procedure of making new circles, that are tangent
+                to three other circles, will produce a circle fractal called an
+                Apollonian gasket.
+              </p>
+              <div class="clearfix"></div>
+
+              <h2>Geometrical construction of an Apollonian gasket</h2>
+              <p>
+                When making a geometrical construction of an Apollonian gasket,
+                new circles are created from triplets of circles by using circle
+                inversion. To ensure that the tangency is preserved, some
+                properties of tangent circles under circle inversion are used.
+              </p>
+
+              <h3>
+                Every circle in a triplet of mutually tangent circles should
+                remain unaltered after reflection
+              </h3>
+              <figure>
+                <img
+                  src="images/gasket1.png"
+                  alt="image"
+                  width="600"
+                  height="300"
+                  class="border"
+                />
+                <figcaption>
+                  Two cases that yield three intersection points.
+                </figcaption>
+              </figure>
+              <p>
+                Given three circles that are mutually tangent to each other,
+                make a circle though their intersection points. The circle
+                through intersection points is called c in the picture above. c
+                is the circle used for making new circles through circle
+                inversion.
+              </p>
+              <p>
+                The picture above depicts what it looks like in the two cases
+                that give rise to three intersection points. Other cases of
+                mutually tangent circles are also possible, but those will only
+                yield one or two intersection points.
+              </p>
+              <p>
+                Consider what happens when the circle a is reflected in c. The
+                points A and B lie on c, they are therefore not altered when
+                reflected in c. Since circle inversion preserves angles, the
+                right angles at A and B will still be right angles after the
+                reflection. The reflection of a in c, is a circle through the
+                same points A and B. The reflected circle will have tangents at
+                A and B that are perpendicular the tangents of c at A and B.
+                Therefore the reflected circle must be the same as the original
+                circle a.
+              </p>
+
+              <h3>Tangency is preserved</h3>
+              <p>
+                Create a circle through the intersection points of three
+                mutually tangent circles. The three tangent circles are blue in
+                the picture below. In order to construct a circle tangent to the
+                three circles, note that there already is a circle in the
+                construction that is tangent to them, this is the red circle in
+                the picture below. If the circles a, b, c, d, were reflected in
+                the yellow circle; the reflections of a, b, and c, would be the
+                same circles as a, b, c. Furthermore, the reflection of d would
+                be tangent to all three, since tangency is preserved when
+                reflecting in circles. Hence, by reflecting the red circle d, a
+                new circle is created that is tangent to all three blue circles.
+              </p>
+              <figure>
+                <img
+                  src="images/gasket2.png"
+                  alt="image"
+                  width="600"
+                  height="300"
+                  class="border"
+                />
+                <figcaption>
+                  Identify the circle tangent to the three blue circles. Reflect
+                  it in the yellow circle.
+                </figcaption>
+              </figure>
+              <p>
+                The easiest way to do this in GeoGebra is to use the
+                spreadsheet. The circle through the intersection points, and the
+                reflection that follows, can be made using the commands:
+              </p>
+              <pre class="codebox">
+A1=Circle[Intersect[a,b], Intersect[a,c], Intersect[b,c]]
+B1=Reflect[d,A1]</pre
+              >
+              <p>
+                The original circles can be renamed to A1,...,A5; they will then
+                automatically appear in the first five cells under column A in
+                the spreadsheet. The circle through the intersection points is
+                not needed, it will not be used again. It is possible to write
+                the above as one single command.
+              </p>
+              <pre class="codebox">
+B1=Reflect[d,Circle[Intersect[a,b], Intersect[a,c], Intersect[b,c]]]</pre
+              >
+              <p>
+                Of the six regions that are to be packed by new circles, three
+                lie adjacent to the largest circle, and three are adjacent to
+                the smallest circle. Keep packing circles in the region between
+                the circles a, b, c. If doing it in the spreadsheet, it is easy
+                to copy the code to fill in the other two regions adjacent to
+                the largest circle c.
+              </p>
+              <figure>
+                <img
+                  src="images/gasket3.png"
+                  alt="image"
+                  width="600"
+                  height="300"
+                  class="border"
+                />
+                <figcaption>And repeat!</figcaption>
+              </figure>
+              <p>
+                When the outer regions, those that are adjacent to the largest
+                circle, have been filled; all the newly created circles can be
+                reflected to fill the inner regions, those adjacent to the
+                smallest circle.
+              </p>
+
+              <h2>Apollonian gasket as a limit set</h2>
+
+              <p>
+                An Apollonian gasket can also be generated as a so-called
+                <em>limit set</em> of a so-called <em>Schottky group</em> made
+                by pairing tangent circles. By slightly changing the
+                circles/Schottky group, the limit set can be made to look like a
+                twisting gasket. Drag the slider to make a twisted Apollonian
+                gasket.
+              </p>
+
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                value="0"
+                step="1"
+                class="form-control-range"
+                id="limitSetSlider"
+                style="max-width: 500px; margin: auto"
+              />
+
+              <div id="limitSetContainer" style="text-align: center"></div>
+              <script src="js/GasketAsLimitSet.min.js"></script>
+            </section>
+
+            <section class="references">
+              <h1>further info:</h1>
+              <p>
+                It is also possible to make a construction using Descartes'
+                Theorem. In that case, a relation between the curvature of the
+                circles is used, and the points are represented as complex
+                numbers. See
+                <a
+                  href="http://en.wikipedia.org/wiki/Descartes'_theorem"
+                  rel="external"
+                  >Wikipedia: Descartes' Theorem</a
+                >
+              </p>
+              <p>
+                <a
+                  href="http://www.dailymail.co.uk/news/article-1236380/Worlds-largest-artwork-etched-desert-sand.html"
+                  rel="external"
+                >
+                  Mail Online: Etched by trucks in the desert sand: At 9 miles
+                  around, gargantuan circle is the world's largest artwork
+                </a>
+              </p>
+              <p>
+                To understand how to make an Apollonian gasket as a limit set,
+                read the book
+                <em>Indra's Pearls: The Vision of Felix Klein</em> by David
+                Mumford, Caroline Series and David Wright.
+              </p>
+            </section>
+            <div class="onlyPrint" style="text-align: center">
+              <p>
+                by Malin Christersson under a Creative Commons
+                Attribution-Noncommercial-Share Alike 2.5 Sweden License
+              </p>
+              <p><a href="#">www.malinc.se</a></p>
+            </div>
+
+            <p>&nbsp;</p>
+
+            <div class="trail noprint">
+              <div class="column-left">
+                <a href="http://www.malinc.se/math/geometry/dothisen.php">
+                  &#9668; Circumscribed and Inscribed Circles &nbsp;</a
+                >
+              </div>
+              <div class="column-right">
+                <a
+                  href="http://www.malinc.se/math/geometry/rulerandcompassen.php"
+                >
+                  &nbsp; Ruler and Compass &#9658;
+                </a>
+              </div>
+              <div class="column-center">&nbsp;</div>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+          <!-- id-content-->
+        </div>
+        <!-- class-content-->
+      </div>
+      <!-- container-fluid-->
+    </div>
+    <!-- wrapper-->
+
+    <script src="../math07.min.js"></script>
+  </body>
+</html>

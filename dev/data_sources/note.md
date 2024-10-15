@@ -1,0 +1,9 @@
+1. Finazon: [Finazon](https://www.finazon.io/) is a powerful API that provides access to a wide range of financial data. It offers real-time data, historical data, and various other features that can be beneficial for financial analysis and decision-making. It's a reliable choice for those who need comprehensive and accurate financial data.
+
+2. Twelve Data: [Twelve Data](https://twelvedata.com/) is another excellent API for accessing financial data. It provides real-time and historical stock data, forex data, cryptocurrency data, and more. It's known for its easy-to-use interface and extensive coverage, making it a good choice for both beginners and experienced users.
+
+3. Alpha Vantage: [Alpha Vantage](https://www.alphavantage.co/) offers free APIs for historical and real-time data on stocks, forex, and cryptocurrencies. It also provides data on options, making it a versatile choice for those interested in various types of financial data.
+
+4. Marketstack: Marketstack offers real-time, intraday, and historical market data. It provides data from over 170,000 tickers around the world, making it a comprehensive source for financial data.
+
+5. IEX Cloud: IEX Cloud provides real-time and historical financial market data through a set of powerful and developer-friendly data APIs and spreadsheets. From traditional asset classes (e.g., stocks, ETFs, mutual funds) to economic indicators, from foreign exchange rates to commodities, from fundamental data to technical indicators, IEX Cloud is a one-stop-shop for enterprise-grade global market data delivered through cloud-based APIs, Excel, and Google Sheets.

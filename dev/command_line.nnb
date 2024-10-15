@@ -1,0 +1,175 @@
+{
+    "cells": [
+        {
+            "language": "typescript",
+            "source": [
+                "import { parseArgs } from \"node:util\";\nimport * as R from \"ramda\";"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const parseSubcommand = (config) => {\n  // The subcommand is a positional, allow them\n  const { tokens } = parseArgs({\n    ...config,\n    tokens: true,\n    allowPositionals: true,\n  });\n  let firstPosToken = tokens.find(({ kind }) => kind === \"positional\");\n  if (!firstPosToken) {\n    throw new Error(\"Command name is missing: \" + config.args);\n  }\n\n  //----- Command options\n\n  const cmdArgs = config.args.slice(0, firstPosToken.index);\n  // Override `config.args`\n  const commandResult = parseArgs({\n    ...config,\n    args: cmdArgs,\n    tokens: false,\n    allowPositionals: false,\n  });\n\n  //----- Subcommand\n\n  const subcommandName = firstPosToken.value;\n\n  const subcmdArgs = config.args.slice(firstPosToken.index + 1);\n  // Override `config.args`\n  const subcommandResult = parseArgs({\n    ...config,\n    args: subcmdArgs,\n    tokens: false,\n  });\n\n  return {\n    commandResult,\n    subcommandName,\n    subcommandResult,\n  };\n};\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const options = {\n  'log': {\n    type: 'string',\n  },\n  color: {\n    type: 'boolean',\n  }\n};"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const args = ['--log', 'all', 'print', '--color', 'file.txt'];\nconst config = {options, allowPositionals: true, args};"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "parseArgs(config)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  values: [Object: null prototype] {",
+                                "    log: \u001b[32m'all'\u001b[39m,",
+                                "    color: \u001b[33mtrue\u001b[39m",
+                                "  },",
+                                "  positionals: [",
+                                "    \u001b[32m'print'\u001b[39m,",
+                                "    \u001b[32m'file.txt'\u001b[39m",
+                                "  ]",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const { tokens } = parseArgs({\n  ...config,\n  tokens: true,\n  allowPositionals: true,\n});"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "parseArgs({options, allowPositionals: true, tokens: true, args})"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  values: [Object: null prototype] {",
+                                "    log: \u001b[32m'all'\u001b[39m,",
+                                "    color: \u001b[33mtrue\u001b[39m",
+                                "  },",
+                                "  positionals: [",
+                                "    \u001b[32m'print'\u001b[39m,",
+                                "    \u001b[32m'file.txt'\u001b[39m",
+                                "  ],",
+                                "  tokens: [",
+                                "    {",
+                                "      kind: \u001b[32m'option'\u001b[39m,",
+                                "      name: \u001b[32m'log'\u001b[39m,",
+                                "      rawName: \u001b[32m'--log'\u001b[39m,",
+                                "      index: \u001b[33m0\u001b[39m,",
+                                "      value: \u001b[32m'all'\u001b[39m,",
+                                "      inlineValue: \u001b[33mfalse\u001b[39m",
+                                "    },",
+                                "    {",
+                                "      kind: \u001b[32m'positional'\u001b[39m,",
+                                "      index: \u001b[33m2\u001b[39m,",
+                                "      value: \u001b[32m'print'\u001b[39m",
+                                "    },",
+                                "    {",
+                                "      kind: \u001b[32m'option'\u001b[39m,",
+                                "      name: \u001b[32m'color'\u001b[39m,",
+                                "      rawName: \u001b[32m'--color'\u001b[39m,",
+                                "      index: \u001b[33m3\u001b[39m,",
+                                "      value: \u001b[90mundefined\u001b[39m,",
+                                "      inlineValue: \u001b[90mundefined\u001b[39m",
+                                "    },",
+                                "    {",
+                                "      kind: \u001b[32m'positional'\u001b[39m,",
+                                "      index: \u001b[33m4\u001b[39m,",
+                                "      value: \u001b[32m'file.txt'\u001b[39m",
+                                "    }",
+                                "  ]",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "options"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  log: {",
+                                "    type: \u001b[32m'string'\u001b[39m",
+                                "  },",
+                                "  color: {",
+                                "    type: \u001b[32m'boolean'\u001b[39m",
+                                "  }",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "let firstPosToken = tokens.find(({ kind }) => kind === \"positional\");"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "firstPosToken"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  kind: \u001b[32m'positional'\u001b[39m,",
+                                "  index: \u001b[33m2\u001b[39m,",
+                                "  value: \u001b[32m'print'\u001b[39m",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

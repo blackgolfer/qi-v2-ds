@@ -1,0 +1,32 @@
+<!-- src/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Apollonian Gasket</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .controls input[type="range"] {
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <label for="depth">Recursion Depth: <span id="depthValue">3</span></label>
+    <input type="range" id="depth" min="0" max="6" value="3">
+  </div>
+  <div id="gasket-container"></div>
+</body>
+</html>

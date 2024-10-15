@@ -1,0 +1,1 @@
+{"status":"active","value":"load_initial","historyValue":{},"context":{"current_operator_output":{"segment":{},"low":{},"high":{}},"segments":[],"normalized_kline":[]},"children":{"loadInitialState":{"snapshot":{"status":"active","input":{"q_0":1}},"src":"stateInit","syncSnapshot":false}}}

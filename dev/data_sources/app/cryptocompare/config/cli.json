@@ -1,0 +1,74 @@
+{
+  "cmd": {
+    "param_cmd": {
+      "source": {
+        "option": {
+          "type": "string",
+          "short": "s",
+          "default": "file"
+        },
+        "range": [
+          "file",
+          "table",
+          "url"
+        ],
+        "title": "change source",
+        "usage": "the valid values are 'file', 'table' or 'url'",
+        "class": "param"
+      },
+      "target": {
+        "option": {
+          "type": "string",
+          "short": "t",
+          "default": "table"
+        },
+        "range": [
+          "file",
+          "table"
+        ],
+        "title": "change target",
+        "usage": "target must be 'file' or 'table'",
+        "class": "param"
+      },
+      "action": {
+        "option": {
+          "type": "string",
+          "short": "a",
+          "default": "create"
+        },
+        "range": [
+          "create",
+          "find_or_create",
+          "update"
+        ],
+        "title": "change action",
+        "usage": "the valid actions are 'create', 'find_or_create' or 'update'",
+        "class": "param"
+      },
+      "model": {
+        "option": {
+          "type": "string",
+          "short": "m",
+          "default": "coin_list"
+        },
+        "range": [
+          "coin_list"
+        ],
+        "title": "change model",
+        "usage": "model name must be a valid model in the sequelize",
+        "class": "param"
+      },
+      "query": {
+        "option": {
+          "type": "string",
+          "short": "q",
+          "default": ""
+        },
+        "title": "query table given by a model",
+        "usage": "the query statement must be a valid SQL",
+        "class": "param"
+      }
+    }
+  },
+  "prompt": "QIMT> "
+}

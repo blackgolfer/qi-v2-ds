@@ -1,0 +1,1511 @@
+{
+    "cells": [
+        {
+            "language": "markdown",
+            "source": [
+                "# The Road of Making CLI"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const S = require(\"./modules/cli_spec_schema.cjs\");\nimport * as fs from \"node:fs\";\nimport * as R from \"ramda\";\nimport { parseArgs } from \"node:util\";\nimport readline from \"node:readline\";\nimport { exec, execSync } from 'child_process';"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "<div class=\"alert alert-block alert-success\">\n<strong>Note</strong>: <mark>./modules/cli_spec_schema.cjs</mark> is generated from <mark>./modules/cli_spec_schema.js</mark>, using <em>rollup</em>:\n<pre>\n<code class=\"language-bash\">\nnpx rollup modules/cli_spec_schema.js --file modules/cli_spec_schema.cjs --format cjs\n</code>\n</pre>\n</div>"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## The spec data"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const user_spec = JSON.parse(fs.readFileSync(\"./test.json\", \"utf8\"));\nconst system_cmd = {\n  \"?\": {\n    title: \"help information\",\n    usage: \"? [cmd]...\",\n    class: \"info\",\n  },\n  param: {\n    title: \"show the current parameters\",\n    usage: \"param [param_cmd]...\",\n    class: \"info\",\n  },\n  quit: {\n    title: \"quit cli\",\n    usage: \"quit\",\n    class: \"exec\",\n  },\n};\n\nconst spec = {\n  cmd: {\n    param_cmd: user_spec.cmd.param_cmd,\n    user_cmd: user_spec.cmd.user_cmd,\n    system_cmd: system_cmd,\n  },\n  prompt: user_spec.prompt,\n};\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Spec validation using schema\nThe module `cli_spec_schema` provides three interfaces:\n- install: install a given schema into the cache\n- init: install all the schemas in the module and return the list of validators of the schemas"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const validateSpec = (spec, validator) =>\n  validator(spec) ? \"Pass!\" : validator.errors;"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const schemas = S.init();"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const v = Object.values(schemas);"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "v.map(a=>a.schema.$id)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "[",
+                                "  \u001b[32m'qi://common/cli/param.schema'\u001b[39m,",
+                                "  \u001b[32m'qi://common/cli/system.value.schema'\u001b[39m,",
+                                "  \u001b[32m'qi://common/cli/system.command.schema'\u001b[39m,",
+                                "  \u001b[32m'qi://common/cli/param.command.schema'\u001b[39m,",
+                                "  \u001b[32m'qi://common/cli/user.command.schema'\u001b[39m,",
+                                "  \u001b[32m'qi://common/cli/user.spec.schema'\u001b[39m,",
+                                "  \u001b[32m'qi://common/cli/command.schema'\u001b[39m,",
+                                "  \u001b[32m'qi://common/cli/main.schema'\u001b[39m",
+                                "]"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const s = [\n  R.path([\"cmd\", \"param_cmd\", 0, \"params\", 0])(spec), // param\n  spec.cmd.system_cmd.quit, // system.value\n  spec.cmd.system_cmd, // system.command\n  spec.cmd.param_cmd, // param.command\n  spec.cmd.user_cmd, // user.command\n  user_spec, // user.spec\n  spec.cmd, // command\n  spec // main\n];"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "R.map((a) => validateSpec(a[1], a[0]), R.zip(v, s))"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "[",
+                                "  \u001b[32m'Pass!'\u001b[39m,",
+                                "  \u001b[32m'Pass!'\u001b[39m,",
+                                "  \u001b[32m'Pass!'\u001b[39m,",
+                                "  \u001b[32m'Pass!'\u001b[39m,",
+                                "  \u001b[32m'Pass!'\u001b[39m,",
+                                "  \u001b[32m'Pass!'\u001b[39m,",
+                                "  \u001b[32m'Pass!'\u001b[39m,",
+                                "  \u001b[32m'Pass!'\u001b[39m",
+                                "]"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "Object.keys(schemas)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "[",
+                                "  \u001b[32m'Param'\u001b[39m,",
+                                "  \u001b[32m'QICliSystemValue'\u001b[39m,",
+                                "  \u001b[32m'QICliSystemCommand'\u001b[39m,",
+                                "  \u001b[32m'QICliParamCommand'\u001b[39m,",
+                                "  \u001b[32m'QICliUserCommand'\u001b[39m,",
+                                "  \u001b[32m'QICliUserSpec'\u001b[39m,",
+                                "  \u001b[32m'QICliCommand'\u001b[39m,",
+                                "  \u001b[32m'QICliMain'\u001b[39m",
+                                "]"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "validateSpec(spec,schemas['QICliMain'])"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'Pass!'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "validateSpec(user_spec,schemas['QICliUserSpec'])"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'Pass!'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Get schema object"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "schemas['Param'].schema"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  \u001b[32m'$id'\u001b[39m: \u001b[32m'qi://common/cli/param.schema'\u001b[39m,",
+                                "  type: \u001b[32m'object'\u001b[39m,",
+                                "  properties: {",
+                                "    name: {",
+                                "      type: \u001b[32m'string'\u001b[39m",
+                                "    },",
+                                "    option: {",
+                                "      type: \u001b[32m'object'\u001b[39m,",
+                                "      properties: \u001b[36m[Object]\u001b[39m,",
+                                "      required: \u001b[36m[Array]\u001b[39m",
+                                "    },",
+                                "    range: {",
+                                "      type: \u001b[32m'array'\u001b[39m,",
+                                "      items: \u001b[36m[Object]\u001b[39m",
+                                "    },",
+                                "    title: {",
+                                "      type: \u001b[32m'string'\u001b[39m",
+                                "    },",
+                                "    usage: {",
+                                "      type: \u001b[32m'string'\u001b[39m",
+                                "    },",
+                                "    class: {",
+                                "      type: \u001b[32m'string'\u001b[39m",
+                                "    }",
+                                "  },",
+                                "  required: [",
+                                "    \u001b[32m'name'\u001b[39m,",
+                                "    \u001b[32m'option'\u001b[39m,",
+                                "    \u001b[32m'title'\u001b[39m,",
+                                "    \u001b[32m'usage'\u001b[39m,",
+                                "    \u001b[32m'class'\u001b[39m",
+                                "  ]",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Extract properties from spec"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Extract commands, param_cmd parameters and system_cmd"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const getUserCommands = ({ cmd: { user_cmd = [] } }) =>\n  user_cmd.map(({ name }) => name);\nconst getParamCommands = ({ cmd: { param_cmd = [] } }) =>\n  param_cmd.map(({ name }) => name);\nconst getSystemCommands = (spec) => R.keys(spec.cmd.system_cmd);\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const usr_cmd = getUserCommands(spec);\nconst param_cmd = getParamCommands(spec);\nconst system_cmd = getSystemCommands(spec);\nconst cmds = system_cmd\n  .concat(param_cmd)\n  .concat(usr_cmd)\n  .filter((a) => a != undefined);"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "cmds"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "[",
+                                "  \u001b[32m'?'\u001b[39m,",
+                                "  \u001b[32m'param'\u001b[39m,",
+                                "  \u001b[32m'quit'\u001b[39m,",
+                                "  \u001b[32m'table_op'\u001b[39m,",
+                                "  \u001b[32m'query'\u001b[39m,",
+                                "  \u001b[32m'ls'\u001b[39m",
+                                "]"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Extract param_cmd's param properties"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const getParamProp = (p, { cmd: { param_cmd = [] } }) =>\n  param_cmd.reduce((result, { name, params = [] }) => {\n    const props = params\n      .filter(R.has(p))\n      .map(({ name, [p]: value }) => [name, value]);\n    return props.length\n      ? { ...result, [name]: Object.fromEntries(props) }\n      : result;\n  }, {});"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "#### options (used to processed command arguments using `parseArgs` from `node:util`)"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const getParamOptions = (spec) => getParamProp(\"option\", spec);"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "getParamOptions(spec)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  table_op: {",
+                                "    source: {",
+                                "      type: \u001b[32m'string'\u001b[39m,",
+                                "      short: \u001b[32m's'\u001b[39m,",
+                                "      default: \u001b[32m'file'\u001b[39m",
+                                "    },",
+                                "    target: {",
+                                "      type: \u001b[32m'string'\u001b[39m,",
+                                "      short: \u001b[32m't'\u001b[39m,",
+                                "      default: \u001b[32m'table'\u001b[39m",
+                                "    },",
+                                "    action: {",
+                                "      type: \u001b[32m'string'\u001b[39m,",
+                                "      short: \u001b[32m'a'\u001b[39m,",
+                                "      default: \u001b[32m'create'\u001b[39m",
+                                "    },",
+                                "    model: {",
+                                "      type: \u001b[32m'string'\u001b[39m,",
+                                "      short: \u001b[32m'm'\u001b[39m,",
+                                "      default: \u001b[32m'coin_list'\u001b[39m",
+                                "    }",
+                                "  },",
+                                "  query: {",
+                                "    model: {",
+                                "      type: \u001b[32m'string'\u001b[39m,",
+                                "      short: \u001b[32m'm'\u001b[39m,",
+                                "      default: \u001b[32m'coin_list'\u001b[39m",
+                                "    }",
+                                "  }",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "#### param usges"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const getParamUsages = (spec) => getParamProp(\"usage\", spec);"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "getParamUsages(spec)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  table_op: {",
+                                "    source: \u001b[32m\"the valid values are 'file', 'table' or 'url'\"\u001b[39m,",
+                                "    target: \u001b[32m\"target must be 'file' or 'table'\"\u001b[39m,",
+                                "    action: \u001b[32m\"the valid actions are 'create', 'find_or_create' or 'update'\"\u001b[39m,",
+                                "    model: \u001b[32m'model name must be a valid model in the sequelize'\u001b[39m",
+                                "  },",
+                                "  query: {",
+                                "    model: \u001b[32m'table model must be a valid model'\u001b[39m",
+                                "  }",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Refactor"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const getParamProp = (p, { cmd: { param_cmd = [] } }) =>\n  param_cmd.reduce((result, { name, params = [] }) => {\n    const props = params\n      .filter(R.has(p))\n      .map(({ name, [p]: value }) => [name, value]);\n    return props.length\n      ? { ...result, [name]: Object.fromEntries(props) }\n      : result;\n  }, {});"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const specProperties = {\n  user_cmd: ({ cmd: { user_cmd = [] } }) => user_cmd.map(({ name }) => name),\n  param_cmd: ({ cmd: { param_cmd = [] } }) =>\n    param_cmd.map(({ name }) => name),\n  system_cmd: (spec) => R.keys(spec.cmd.system_cmd),\n  options: (spec) => getParamProp(\"option\", spec),\n  usages: (spec) => getParamProp(\"usage\", spec),\n  titles: (spec) => getParamProp(\"title\", spec),\n  parameters: (spec) => R.map((a)=>R.map((b)=>b.default,a),getParamProp(\"option\",spec)),\n};\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const master_info = R.map(p=>p(spec))(specProperties);"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "master_info"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  user_cmd: [",
+                                "    \u001b[32m'ls'\u001b[39m",
+                                "  ],",
+                                "  param_cmd: [",
+                                "    \u001b[32m'table_op'\u001b[39m,",
+                                "    \u001b[32m'query'\u001b[39m",
+                                "  ],",
+                                "  system_cmd: [",
+                                "    \u001b[32m'?'\u001b[39m,",
+                                "    \u001b[32m'param'\u001b[39m,",
+                                "    \u001b[32m'quit'\u001b[39m",
+                                "  ],",
+                                "  options: {",
+                                "    table_op: {",
+                                "      source: \u001b[36m[Object]\u001b[39m,",
+                                "      target: \u001b[36m[Object]\u001b[39m,",
+                                "      action: \u001b[36m[Object]\u001b[39m,",
+                                "      model: \u001b[36m[Object]\u001b[39m",
+                                "    },",
+                                "    query: {",
+                                "      model: \u001b[36m[Object]\u001b[39m",
+                                "    }",
+                                "  },",
+                                "  usages: {",
+                                "    table_op: {",
+                                "      source: \u001b[32m\"the valid values are 'file', 'table' or 'url'\"\u001b[39m,",
+                                "      target: \u001b[32m\"target must be 'file' or 'table'\"\u001b[39m,",
+                                "      action: \u001b[32m\"the valid actions are 'create', 'find_or_create' or 'update'\"\u001b[39m,",
+                                "      model: \u001b[32m'model name must be a valid model in the sequelize'\u001b[39m",
+                                "    },",
+                                "    query: {",
+                                "      model: \u001b[32m'table model must be a valid model'\u001b[39m",
+                                "    }",
+                                "  },",
+                                "  titles: {",
+                                "    table_op: {",
+                                "      source: \u001b[32m'change source'\u001b[39m,",
+                                "      target: \u001b[32m'change target'\u001b[39m,",
+                                "      action: \u001b[32m'change action'\u001b[39m,",
+                                "      model: \u001b[32m'change model'\u001b[39m",
+                                "    },",
+                                "    query: {",
+                                "      model: \u001b[32m'table model used in query'\u001b[39m",
+                                "    }",
+                                "  },",
+                                "  parameters: {",
+                                "    table_op: {",
+                                "      source: \u001b[32m'file'\u001b[39m,",
+                                "      target: \u001b[32m'table'\u001b[39m,",
+                                "      action: \u001b[32m'create'\u001b[39m,",
+                                "      model: \u001b[32m'coin_list'\u001b[39m",
+                                "    },",
+                                "    query: {",
+                                "      model: \u001b[32m'coin_list'\u001b[39m",
+                                "    }",
+                                "  }",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Help message"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const getHelpMessage = (spec) => {\n  const getCommandTitles = (commands) =>\n    commands.map(({ name, title }) => ` - ${name}: ${title}`);\n\n  const getUserCmdTitles = () => getCommandTitles(spec.cmd?.user_cmd || []);\n  const getParamCmdTitles = () => getCommandTitles(spec.cmd?.param_cmd || []);\n  const getSystemCmdTitles = () => {\n    const systemCommands = Object.entries(spec.cmd.system_cmd).map(\n      ([key, { title }]) => ` - ${key}: ${title}`\n    );\n    return systemCommands;\n  };\n\n  return [\n    \"System commands:\",\n    ...getSystemCmdTitles(),\n    \"Param commands:\",\n    ...getParamCmdTitles(),\n    \"Commands without param:\",\n    ...getUserCmdTitles(),\n  ].join(\"\\n\");\n};"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "getHelpMessage(spec)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'System commands:\\n'\u001b[39m +",
+                                "  \u001b[32m' - ?: help information\\n'\u001b[39m +",
+                                "  \u001b[32m' - param: show the current parameters\\n'\u001b[39m +",
+                                "  \u001b[32m' - quit: quit cli\\n'\u001b[39m +",
+                                "  \u001b[32m'Param commands:\\n'\u001b[39m +",
+                                "  \u001b[32m' - table_op: a table operator\\n'\u001b[39m +",
+                                "  \u001b[32m' - query: a table query\\n'\u001b[39m +",
+                                "  \u001b[32m'Commands without param:\\n'\u001b[39m +",
+                                "  \u001b[32m' - ls: list of files'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Command usages"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const commandUsage = (cmd) => {\n  const param_usage = (cmd, param) => master_info.usages[cmd][param];\n  const command_option = (cmd) =>\n    Object.entries(master_info.options[\"table_op\"]).reduce(\n      (acc, [k, v]) => acc + ` -${v.short}, --${k}: ${param_usage(cmd, k)}\\n  `,\n      \"\"\n    );\n  return `${cmd} [run|set|ls] [args]\\n args:\\n  ${command_option(\n    cmd\n  )}if args not specified, the last set value will be used, if an arg has never been set, then the default value will be used.`;\n};\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "console.log(commandUsage('table_op'));"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "table_op [run|set|ls] [args]",
+                                " args:",
+                                "   -s, --source: the valid values are 'file', 'table' or 'url'",
+                                "   -t, --target: target must be 'file' or 'table'",
+                                "   -a, --action: the valid actions are 'create', 'find_or_create' or 'update'",
+                                "   -m, --model: model name must be a valid model in the sequelize",
+                                "  if args not specified, the last set value will be used, if an arg has never been set, then the default value will be used.",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Spec handler\nWe can assemble the above functions into a spec handler class."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "<div class=\"alert alert-block alert-danger\">\n<b>ToDo:</b>\n<ol>\n  <li>schema</li>\n  <ul>\n    <li> update param command schema to have title property </li>\n    <li> add usage property for commands </li>\n  </ul>\n  <li>module</li>\n    <ul>\n      <li>add index.js and index.cjs for modules</li>\n    <ul>\n</ol>\n</div>"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "class SpecHandler {\n  constructor(user_spec, schemas) {\n    // validate the user spec\n    this._validateSpec(user_spec, schemas[\"QICliUserSpec\"]);\n    this.spec = this._buildSpec(user_spec);\n    // validate the spec\n    this._validateSpec(this.spec, schemas[\"QICliMain\"]);\n    // master information\n    this.master_info = this._masterInfo(this.spec);\n    // help message\n    this.help_message = this._helpMessage(this.spec);\n    // command usages\n  }\n\n  _buildSpec(user_spec) {\n    const system_cmd = {\n      \"?\": {\n        title: \"help information\",\n        usage: \"? [cmd]...\",\n        class: \"info\",\n      },\n      param: {\n        title: \"show the current parameters\",\n        usage: \"param [param cmd]...\",\n        class: \"info\",\n      },\n      quit: {\n        title: \"quit cli\",\n        usage: \"quit\",\n        class: \"exec\",\n      },\n    };\n\n    return {\n      cmd: {\n        param_cmd: user_spec.cmd.param_cmd,\n        user_cmd: user_spec.cmd.user_cmd,\n        system_cmd: system_cmd,\n      },\n      prompt: user_spec.prompt,\n    };\n  }\n\n  _validateSpec(spec, validator) {\n    if (!validator(spec)) throw new Error(validator.errors);\n  }\n\n  _masterInfo(spec) {\n    const getParamProp = (p, { cmd: { param_cmd = [] } }) =>\n      param_cmd.reduce((result, { name, params = [] }) => {\n        const props = params\n          .filter(R.has(p))\n          .map(({ name, [p]: value }) => [name, value]);\n        return props.length\n          ? { ...result, [name]: Object.fromEntries(props) }\n          : result;\n      }, {});\n\n    const specProperties = {\n      user_cmd: ({ cmd: { user_cmd = [] } }) =>\n        user_cmd.map(({ name }) => name),\n      param_cmd: ({ cmd: { param_cmd = [] } }) =>\n        param_cmd.map(({ name }) => name),\n      system_cmd: (spec) => R.keys(spec.cmd.system_cmd),\n      options: (spec) => getParamProp(\"option\", spec),\n      usages: (spec) => getParamProp(\"usage\", spec),\n      titles: (spec) => getParamProp(\"title\", spec),\n      parameters: (spec) =>\n        R.map((a) => R.map((b) => b.default, a), getParamProp(\"option\", spec)),\n    };\n\n    return R.map((p) => p(spec), specProperties);\n  }\n\n  _helpMessage(spec) {\n    const getCommandTitles = (commands) =>\n      commands.map(({ name, title }) => ` - ${name}: ${title}`);\n\n    const getUserCmdTitles = () => getCommandTitles(spec.cmd?.user_cmd || []);\n    const getParamCmdTitles = () => getCommandTitles(spec.cmd?.param_cmd || []);\n    const getSystemCmdTitles = () => {\n      const systemCommands = Object.entries(spec.cmd.system_cmd).map(\n        ([key, { title }]) => ` - ${key}: ${title}`\n      );\n      return systemCommands;\n    };\n\n    return [\n      \"System commands:\",\n      ...getSystemCmdTitles(),\n      \"Param commands:\",\n      ...getParamCmdTitles(),\n      \"Commands without param:\",\n      ...getUserCmdTitles(),\n    ].join(\"\\n\");\n  }\n\n  commandUsage(cmd) {\n    const paramCommandUsage = (cmd) => {\n      const param_usage = (cmd, param) => master_info.usages[cmd][param];\n      const command_option = (cmd) =>\n        Object.entries(master_info.options[\"table_op\"]).reduce(\n          (acc, [k, v]) =>\n            acc + ` -${v.short}, --${k}: ${param_usage(cmd, k)}\\n  `,\n          \"\"\n        );\n      return `${cmd} [run|set|ls] [args]\\n args:\\n  ${command_option(\n        cmd\n      )}if args not specified, the last set value will be used, if an arg has never been set, then the default value will be used.`;\n    };\n\n    const systemCommandUsage = (cmd) => `${cmd}: ${this.spec.cmd.system_cmd[cmd].title}`;\n    const userCommandUsage = (cmd) => this.spec.cmd.user_cmd.filter((a)=>a.name===cmd)[0].title;\n\n    let ct = this.commandType(cmd);\n    if (ct == undefined) throw new Error(\"Unknown command in SpecHandler.commandUsage\");\n    else if (ct == \"param_cmd\") return paramCommandUsage(cmd);\n    else if (ct == \"system_cmd\") return systemCommandUsage(cmd);\n    else return userCommandUsage(cmd);\n  }\n\n  commandType(cmd) {\n    if (\n      R.has(\"user_cmd\", this.master_info) &&\n      R.includes(cmd, this.master_info.user_cmd)\n    )\n      return \"user_cmd\";\n    else if (\n      R.has(\"param_cmd\", this.master_info) &&\n      R.includes(cmd, this.master_info.param_cmd)\n    )\n      return \"param_cmd\";\n    else if (R.includes(cmd, this.master_info.system_cmd))\n      return \"system_cmd\";\n    else return undefined;\n  }\n}\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const spec_handler = new SpecHandler(user_spec,schemas);"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.commandType('table_op')"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'param_cmd'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler._helpMessage(spec)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'System commands:\\n'\u001b[39m +",
+                                "  \u001b[32m' - ?: help information\\n'\u001b[39m +",
+                                "  \u001b[32m' - param: show the current parameters\\n'\u001b[39m +",
+                                "  \u001b[32m' - quit: quit cli\\n'\u001b[39m +",
+                                "  \u001b[32m'Param commands:\\n'\u001b[39m +",
+                                "  \u001b[32m' - table_op: a table operator\\n'\u001b[39m +",
+                                "  \u001b[32m' - query: a table query\\n'\u001b[39m +",
+                                "  \u001b[32m'Commands without param:\\n'\u001b[39m +",
+                                "  \u001b[32m' - ls: list of files'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.help_message"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'System commands:\\n'\u001b[39m +",
+                                "  \u001b[32m' - ?: help information\\n'\u001b[39m +",
+                                "  \u001b[32m' - param: show the current parameters\\n'\u001b[39m +",
+                                "  \u001b[32m' - quit: quit cli\\n'\u001b[39m +",
+                                "  \u001b[32m'Param commands:\\n'\u001b[39m +",
+                                "  \u001b[32m' - table_op: a table operator\\n'\u001b[39m +",
+                                "  \u001b[32m' - query: a table query\\n'\u001b[39m +",
+                                "  \u001b[32m'Commands without param:\\n'\u001b[39m +",
+                                "  \u001b[32m' - ls: list of files'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.commandUsage('table_op')"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'table_op [run|set|ls] [args]\\n'\u001b[39m +",
+                                "  \u001b[32m' args:\\n'\u001b[39m +",
+                                "  \u001b[32m\"   -s, --source: the valid values are 'file', 'table' or 'url'\\n\"\u001b[39m +",
+                                "  \u001b[32m\"   -t, --target: target must be 'file' or 'table'\\n\"\u001b[39m +",
+                                "  \u001b[32m\"   -a, --action: the valid actions are 'create', 'find_or_create' or 'update'\\n\"\u001b[39m +",
+                                "  \u001b[32m'   -m, --model: model name must be a valid model in the sequelize\\n'\u001b[39m +",
+                                "  \u001b[32m'  if args not specified, the last set value will be used, if an arg has never been set, then the default value will be used.'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.commandUsage('?')"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'?: help information'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.commandType('?')"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'system_cmd'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Processing command line"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Input tokens\nProcess the input into two parts: command (the first token) and arguments (the rest of the tokens)"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const table_op_line = \"table_op set -s file -t table -a create\";"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const table_op_option = master_info.options.table_op;"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const inputTokens = (line) => {\n  const t = line.trim().split(' ').filter((a)=>a!='');\n  return t.length>0?[R.head(t),R.tail(t)]:[]\n}"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "inputTokens(table_op_line)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "[",
+                                "  \u001b[32m'table_op'\u001b[39m,",
+                                "  [",
+                                "    \u001b[32m'set'\u001b[39m,",
+                                "    \u001b[32m'-s'\u001b[39m,",
+                                "    \u001b[32m'file'\u001b[39m,",
+                                "    \u001b[32m'-t'\u001b[39m,",
+                                "    \u001b[32m'table'\u001b[39m,",
+                                "    \u001b[32m'-a'\u001b[39m,",
+                                "    \u001b[32m'create'\u001b[39m",
+                                "  ]",
+                                "]"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Identifying the type of commands"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.commandType('table_op')"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'param_cmd'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.commandType('?')"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'system_cmd'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.commandType('ls')"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'user_cmd'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.commandType('foo')"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Command line processor"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const commandLineProcessor = (line, spec_handler) => {\n  const inputTokens = (line) => {\n    const t = line\n      .trim()\n      .split(\" \")\n      .filter((a) => a != \"\");\n    return t.length > 0 ? [R.head(t), R.tail(t)] : [];\n  };\n\n  const paramLineProcessor = (cmd, args) => {\n    if (\n      !R.has(\"options\", spec_handler.master_info) ||\n      !R.has(cmd, spec_handler.master_info.options)\n    ) {\n      throw new Error(\"Unknown param command\");\n    } else\n      return parseArgs({\n        options: spec_handler.master_info.options[cmd],\n        tokens: true,\n        allowPositionals: true,\n        args: args,\n      });\n  };\n\n  const [cmd, args] = inputTokens(line);\n  let parameters;\n  let ct = spec_handler.commandType(cmd);\n  if (ct === \"user_cmd\" || ct === \"system_cmd\") {\n    parameters = args;\n  } else if (ct === \"param_cmd\") {\n    parameters = paramLineProcessor(cmd, args);\n  } else {\n    throw new Error(\"Unknown command\");\n  }\n  return [cmd, ct, parameters];\n};\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "commandLineProcessor(table_op_line,spec_handler)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "[",
+                                "  \u001b[32m'table_op'\u001b[39m,",
+                                "  \u001b[32m'param_cmd'\u001b[39m,",
+                                "  {",
+                                "    values: [Object: null prototype] {",
+                                "      source: \u001b[32m'file'\u001b[39m,",
+                                "      target: \u001b[32m'table'\u001b[39m,",
+                                "      action: \u001b[32m'create'\u001b[39m,",
+                                "      model: \u001b[32m'coin_list'\u001b[39m",
+                                "    },",
+                                "    positionals: [",
+                                "      \u001b[32m'set'\u001b[39m",
+                                "    ],",
+                                "    tokens: [",
+                                "      \u001b[36m[Object]\u001b[39m,",
+                                "      \u001b[36m[Object]\u001b[39m,",
+                                "      \u001b[36m[Object]\u001b[39m,",
+                                "      \u001b[36m[Object]\u001b[39m",
+                                "    ]",
+                                "  }",
+                                "]"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const help_line = \"? table_op\";"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "commandLineProcessor(help_line,spec_handler)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "[",
+                                "  \u001b[32m'?'\u001b[39m,",
+                                "  \u001b[32m'system_cmd'\u001b[39m,",
+                                "  [",
+                                "    \u001b[32m'table_op'\u001b[39m",
+                                "  ]",
+                                "]"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Command handler"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### First version"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "class CommandHandler {\n  constructor(spec_handler, user_cmd_handler, param_cmd_handler) {\n    this.parameters = R.clone(spec_handler.master_info.parameters);\n    this.user_cmd_handler = user_cmd_handler;\n    this.param_cmd_handler = param_cmd_handler;\n  }\n  async execute(msg) {\n    const cmd = msg[0];\n    const type = msg[1];\n    const param = msg[2];\n    switch (type) {\n      case \"param_cmd\":\n        // require param_cmd_handler return the new parameter so the\n        // handler remember the last state of the parameters.\n        this.parameters[cmd] = this.param_cmd_handler(\n          cmd,\n          this.parameters[cmd]\n        );\n        break;\n      case \"system_cmd\":\n        this._systemCommand(cmd, param);\n        break;\n      case \"user_cmd\":\n        await this.user_cmd_handler(cmd, param);\n        break;\n      default:\n        throw new Error(\"Unknown command in CommandHandler.execute\");\n    }\n  }\n\n  _systemCommand(cmd, param) {\n    switch (cmd) {\n      case \"?\":\n        if (param.length == 0) {\n          this._print(spec_handler.help_message);\n        } else {\n          let counter = 0;\n          param.forEach((a) => {\n            //counter += 1;\n            if (spec_handler.commandType(a) != undefined)\n              this._print(\n                `(${++counter}) ${a} usage:\\n ${spec_handler.commandUsage(a)}`\n              );\n            else this._print(`unknown command '${a}'`);\n          });\n        }\n        break;\n    }\n  }\n\n  _print(msg) {\n    console.log(msg);\n  }\n}\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Second version: enhanced by chat-gpt"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "#### Summary of Changes (from chat-gpt):\n1. **Destructuring the Message Array**:\n   - Used destructuring to extract `cmd`, `type`, and `param` directly from the `msg` array. This makes the code cleaner and easier to read.\n\n2. **Created a New Method for Parameter Command Handling**:\n   - Extracted the logic for handling parameter commands into a private method `_handleParamCommand`. This makes the `execute` method less cluttered and adheres to the single responsibility principle.\n\n3. **Simplified System Command Handling**:\n   - Simplified the `_systemCommand` method by organizing the logic for displaying help messages and usages into a dedicated method `_printCommandUsages`.\n\n4. **Changed Variable Naming for Consistency**:\n   - Used camelCase for handler variables (`spec_handler` to `specHandler`, etc.) to keep the naming consistent across the class.\n\n5. **Used `for...of` Loop**:\n   - Replaced the `forEach` method with a `for...of` loop in the `_printCommandUsages` method for better readability and to keep the count of commands straightforward.\n\nThese changes improve the maintainability and readability of the code, making it easier for someone else (or yourself in the future) to understand the structure and intended functionality without altering the behavior of the original code."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "class CommandHandler {\n  constructor(specHandler, userCmdHandler, paramCmdHandler) {\n    this.parameters = R.clone(specHandler.master_info.parameters);\n    this.userCmdHandler = userCmdHandler;\n    this.paramCmdHandler = paramCmdHandler;\n  }\n\n  async execute(msg) {\n    const [cmd, type, param] = msg;\n\n    switch (type) {\n      case \"param_cmd\":\n        this._handleParamCommand(cmd);\n        break;\n      case \"system_cmd\":\n        this._systemCommand(cmd, param);\n        break;\n      case \"user_cmd\":\n        await this.userCmdHandler(cmd, param);\n        break;\n      default:\n        throw new Error(\"Unknown command in CommandHandler.execute\");\n    }\n  }\n\n  _handleParamCommand(cmd) {\n    this.parameters[cmd] = this.paramCmdHandler(cmd, this.parameters[cmd]);\n  }\n\n  _systemCommand(cmd, param) {\n    if (cmd === \"?\") {\n      param.length === 0 ? this._print(specHandler.help_message) : this._printCommandUsages(param);\n    }\n  }\n\n  _printCommandUsages(param) {\n    let counter = 0;\n    for (const a of param) {\n      if (specHandler.commandType(a) !== undefined) {\n        this._print(`(${++counter}) ${a} usage:\\n ${specHandler.commandUsage(a)}`);\n      } else {\n        this._print(`unknown command '${a}'`);\n      }\n    }\n  }\n\n  _print(msg) {\n    console.log(msg);\n  }\n}\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### 3rd version: enhanced by gpt o1, without using rxjs"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "class CommandHandler {\n  constructor(specHandler, userCmdHandler, paramCmdHandler) {\n    this.specHandler = specHandler;\n    this.parameters = R.clone(specHandler.master_info.parameters);\n    this.userCmdHandler = userCmdHandler;\n    this.paramCmdHandler = paramCmdHandler;\n\n    // Mapping command types to their handlers\n    this.commandHandlers = {\n      param_cmd: this.handleParamCmd.bind(this),\n      system_cmd: this.handleSystemCmd.bind(this),\n      user_cmd: this.handleUserCmd.bind(this),\n    };\n  }\n\n  /**\n   * Executes a command based on the message type.\n   * @param {Array} msg - The command message [cmd, type, param].\n   */\n  async execute(msg) {\n    if (!Array.isArray(msg) || msg.length < 3) {\n      throw new Error(\"Invalid message format. Expected [cmd, type, param].\");\n    }\n\n    const [cmd, type, param] = msg;\n\n    const handler = this.commandHandlers[type];\n    if (handler) {\n      await handler(cmd, param);\n    } else {\n      throw new Error(`Unknown command type '${type}' in CommandHandler.execute`);\n    }\n  }\n\n  /**\n   * Handles parameter commands by updating the internal parameters.\n   * @param {string} cmd - The command name.\n   * @param {*} param - The parameter value.\n   */\n  handleParamCmd(cmd, param) {\n    const newParam = this.paramCmdHandler(cmd, this.parameters[cmd]);\n    this.parameters = R.assoc(cmd, newParam, this.parameters);\n  }\n\n  /**\n   * Handles system commands, such as displaying help messages.\n   * @param {string} cmd - The system command.\n   * @param {Array} param - The parameters for the system command.\n   */\n  handleSystemCmd(cmd, param) {\n    switch (cmd) {\n      case \"?\":\n        if (param.length === 0) {\n          this._print(this.specHandler.help_message);\n        } else {\n          this._displayCommandUsages(param);\n        }\n        break;\n      // Future system commands can be added here\n      default:\n        this._print(`Unhandled system command '${cmd}'`);\n    }\n  }\n\n  /**\n   * Handles user commands by delegating to the user command handler.\n   * @param {string} cmd - The user command.\n   * @param {*} param - The parameter for the user command.\n   */\n  async handleUserCmd(cmd, param) {\n    await this.userCmdHandler(cmd, param);\n  }\n\n  /**\n   * Displays the usage of specified commands.\n   * @param {Array} commands - Array of command names.\n   */\n  _displayCommandUsages(commands) {\n    let counter = 0;\n    commands.forEach((command) => {\n      const commandType = this.specHandler.commandType(command);\n      if (commandType !== undefined) {\n        counter += 1;\n        const usage = this.specHandler.commandUsage(command);\n        this._print(`(${counter}) ${command} usage:\\n${usage}`);\n      } else {\n        this._print(`Unknown command '${command}'`);\n      }\n    });\n  }\n\n  /**\n   * Outputs a message to the console.\n   * @param {string} msg - The message to print.\n   */\n  _print(msg) {\n    console.log(msg);\n  }\n}"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "Let's refactor the provided `CommandHandler` class to improve its readability, maintainability, and adherence to modern JavaScript best practices using **functional programming** principles. We'll address the following key areas:\n\n1. **Correcting Scope and References**: Ensure all dependencies, such as `spec_handler`, are correctly referenced within the class.\n2. **Using Destructuring**: Simplify the extraction of message components.\n3. **Replacing `switch` Statements**: Utilize a command-handler mapping for better scalability and readability.\n4. **Enhancing Error Handling**: Provide more descriptive error messages and handle edge cases.\n5. **Adopting Functional Programming Principles**: Leverage Ramda.js for immutability and pure functions where applicable.\n\n### **Issues Identified**\n\n1. **Undefined `spec_handler` in `_systemCommand`**: The `_systemCommand` method references `spec_handler` without `this`, which leads to a reference error.\n2. **Use of `switch` Statements**: While functional, `switch` statements can become unwieldy as the number of command types grows.\n3. **Lack of Input Validation**: There's no check to ensure that `msg` has the required structure (i.e., at least three elements).\n4. **Side Effects in Methods**: The methods perform side effects (like logging) directly, which can be abstracted for better testability.\n\n### **Refactoring Highlights**\n\n1. **Properly Scoped `specHandler`**:\n\n   - **Issue Addressed**: The original `_systemCommand` method referenced `spec_handler` without `this`, causing a reference error.\n   - **Solution**: In the constructor, assign `specHandler` to `this.specHandler` and reference it using `this.specHandler` within all class methods.\n\n2. **Destructuring and Input Validation**:\n\n   - **Issue Addressed**: No validation to ensure `msg` has the required structure.\n   - **Solution**: Added a check to confirm that `msg` is an array with at least three elements. Used array destructuring for clarity.\n\n3. **Replacing `switch` Statements with Handler Mapping**:\n\n   - **Issue Addressed**: `switch` statements can become cumbersome as the number of command types increases.\n   - **Solution**: Introduced a `commandHandlers` object that maps command types to their respective handler methods. This approach facilitates easier addition of new command types and improves readability.\n\n4. **Isolating Command Handling Logic**:\n\n   - **Issue Addressed**: System command logic was embedded within a `switch` statement.\n   - **Solution**: Created separate methods (`handleParamCmd`, `handleSystemCmd`, `handleUserCmd`) to handle different command types. This separation adheres to the Single Responsibility Principle, making each method easier to manage and test.\n\n5. **Enhanced Error Messages**:\n\n   - **Issue Addressed**: Generic error messages can lack context.\n   - **Solution**: Provided more descriptive error messages that include the unknown command type or specify invalid message formats.\n\n6. **Functional Programming Enhancements with Ramda.js**:\n\n   - **Issue Addressed**: Potential mutable updates to `this.parameters`.\n   - **Solution**: Used Ramda's `assoc` function to immutably update the `this.parameters` object, ensuring the original object is not mutated directly.\n\n7. **Async/Await Consistency**:\n\n   - **Issue Addressed**: Mixed synchronous and asynchronous command handlers.\n   - **Solution**: Ensured that asynchronous operations (like `userCmdHandler`) are properly awaited and handled within their respective methods.\n\n8. **Scalability for Future Commands**:\n\n   - **Issue Addressed**: Limited structure for adding new command types.\n   - **Solution**: The handler mapping approach makes it straightforward to add new command types by simply mapping them to new handler methods without modifying existing `execute` logic.\n\n### **Benefits of the Refactored Approach**\n\n- **Readability**: Clear separation of concerns makes the code easier to understand.\n- **Maintainability**: Adding or modifying command types is straightforward without altering the core `execute` method.\n- **Scalability**: The system can handle a growing number of command types without becoming unwieldy.\n- **Testability**: Isolated handler methods facilitate unit testing.\n- **Immutability**: Leveraging Ramda.js ensures that state modifications are predictable and side-effect-free.\n\n### **Conclusion**\n\nThe refactored `CommandHandler` class is more robust, readable, and maintainable. By adopting functional programming principles and leveraging Ramda.js alongside RxJS, the class structure promotes immutability and pure function usage, enhancing both performance and reliability. Additionally, the handler mapping approach simplifies the integration of new command types, ensuring the system remains scalable as requirements evolve."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### 4th version: enhanced by gpt o1, using rxjs\nFor more information, see `docs/cli/command_handler.md`"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "import {Subject } from 'rxjs';\nimport { switchMap } from 'rxjs/operators';\n\nclass CommandHandler {\n  constructor(specHandler, userCmdHandler, paramCmdHandler) {\n    this.specHandler = specHandler;\n    this.parameters = R.clone(specHandler.master_info.parameters);\n    this.userCmdHandler = userCmdHandler;\n    this.paramCmdHandler = paramCmdHandler;\n\n    // Initialize RxJS Subject for commands\n    this.commandSubject = new Subject();\n\n    // Setup command stream processing\n    this.setupCommandStream();\n\n    // Mapping command types to their handlers\n    this.commandHandlers = {\n      param_cmd: this.handleParamCmd.bind(this),\n      system_cmd: this.handleSystemCmd.bind(this),\n      user_cmd: this.handleUserCmd.bind(this),\n    };\n  }\n\n  /**\n   * Initializes the RxJS command stream with necessary operators.\n   */\n  setupCommandStream() {\n    this.commandSubject\n      .pipe(\n        switchMap(cmdMsg => this.processCommand(cmdMsg))\n      )\n      .subscribe({\n        next: () => {},\n        error: (err) => console.error('Error in command stream:', err),\n      });\n  }\n\n  /**\n   * Pushes a new command into the command stream.\n   * @param {Array} msg - The command message [cmd, type, param].\n   */\n  execute(msg) {\n    this.commandSubject.next(msg);\n  }\n\n  /**\n   * Processes a single command message.\n   * @param {Array} msg - The command message [cmd, type, param].\n   */\n  async processCommand(msg) {\n    if (!Array.isArray(msg) || msg.length < 3) {\n      throw new Error(\"Invalid message format. Expected [cmd, type, param].\");\n    }\n\n    const [cmd, type, param] = msg;\n\n    const handler = this.commandHandlers[type];\n    if (handler) {\n      await handler(cmd, param);\n    } else {\n      throw new Error(`Unknown command type '${type}' in CommandHandler.execute`);\n    }\n  }\n\n  /**\n   * Handles parameter commands by updating the internal parameters.\n   * @param {string} cmd - The command name.\n   * @param {*} param - The parameter value.\n   */\n  handleParamCmd(cmd, param) {\n    const newParam = this.paramCmdHandler(cmd, this.parameters[cmd]);\n    this.parameters = R.assoc(cmd, newParam, this.parameters);\n    this._print(`Parameter '${cmd}' updated to '${newParam}'.`);\n  }\n\n  /**\n   * Handles system commands, such as displaying help messages.\n   * @param {string} cmd - The system command.\n   * @param {Array} param - The parameters for the system command.\n   */\n  handleSystemCmd(cmd, param) {\n    switch (cmd) {\n      case \"?\":\n        if (param.length === 0) {\n          this._print(this.specHandler.help_message);\n        } else {\n          this._displayCommandUsages(param);\n        }\n        break;\n      // Future system commands can be added here\n      default:\n        this._print(`Unhandled system command '${cmd}'`);\n    }\n  }\n\n  /**\n   * Handles user commands by delegating to the user command handler.\n   * @param {string} cmd - The user command.\n   * @param {*} param - The parameter for the user command.\n   */\n  async handleUserCmd(cmd, param) {\n    try {\n      await this.userCmdHandler(cmd, param);\n      this._print(`User command '${cmd}' executed successfully.`);\n    } catch (error) {\n      this._print(`Error executing user command '${cmd}': ${error.message}`);\n    }\n  }\n\n  /**\n   * Displays the usage of specified commands.\n   * @param {Array} commands - Array of command names.\n   */\n  _displayCommandUsages(commands) {\n    let counter = 0;\n    commands.forEach((command) => {\n      const commandType = this.specHandler.commandType(command);\n      if (commandType !== undefined) {\n        counter += 1;\n        const usage = this.specHandler.commandUsage(command);\n        this._print(`(${counter}) ${command} usage:\\n${usage}`);\n      } else {\n        this._print(`Unknown command '${command}'`);\n      }\n    });\n  }\n\n  /**\n   * Outputs a message to the console.\n   * @param {string} msg - The message to print.\n   */\n  _print(msg) {\n    console.log(msg);\n  }\n}"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### Final version\n\n#### Adapting the chat-gpt refactoring\nchat-gpt gives very good suggestion, except point 5, as for `_systemCommand`, we keep the switch structure, this is more suitable when we add more system commands in the future."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "import {Subject } from 'rxjs';\nimport { switchMap } from 'rxjs/operators';\n\nclass CommandHandler {\n  constructor(specHandler, userCmdHandler, paramCmdHandler) {\n    this.parameters = R.clone(specHandler.master_info.parameters);\n    this.userCmdHandler = userCmdHandler;\n    this.paramCmdHandler = paramCmdHandler;\n    this.specHandler = specHandler;\n  }\n\n  async execute(msg) {\n    const [cmd, type, param] = msg;\n\n    switch (type) {\n      case \"param_cmd\":\n        this._handleParamCommand(cmd);\n        break;\n      case \"system_cmd\":\n        this._systemCommand(cmd, param);\n        break;\n      case \"user_cmd\":\n        await this.userCmdHandler(cmd, param);\n        break;\n      default:\n        throw new Error(\"Unknown command in CommandHandler.execute\");\n    }\n  }\n\n  _handleParamCommand(cmd) {\n    this.parameters[cmd] = this.paramCmdHandler(cmd, this.parameters[cmd]);\n  }\n\n  _systemCommand(cmd, param) {\n    switch (cmd) {\n      case \"?\":\n        param.length === 0\n          ? this._print(this.specHandler.help_message)\n          : this._cmdInfoQuery(param, (a) => this.specHandler.commandUsage(a));\n        break;\n      case \"param\":\n        param.length === 0\n          ? this._print(this.parameters)\n          : this._cmdInfoQuery(param, (a) =>\n              JSON.stringify(this.parameters[a], null, 2)\n            );\n        break;\n      case \"quit\":\n        break; // should not be here\n      default:\n        break; // neither should be here\n    }\n  }\n\n  // this is helper function for element `a` in `param` is a command,\n  // and `info(a)` provides the needed information\n  //\n  _cmdInfoQuery(param, info) {\n    let counter = 0;\n    param.forEach((a) => {\n      if (this.specHandler.commandType(a) !== undefined) {\n        this._print(`(${++counter}) ${a}:\\n ${info(a)}`);\n      } else {\n        this._print(`unknown command '${a}'`);\n      }\n    });\n  }\n\n  _print(msg) {\n    console.log(msg);\n  }\n}\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "#### Adapting the gpt o1 refactoring using rxjx\nThe gpt o1 refactoring is big enhancement from the chat-gpt version, it is also nice to use the rxjs paradigm."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "import {Subject } from 'rxjs';\nimport { switchMap } from 'rxjs/operators';\n\nclass CommandHandler {\n  constructor(specHandler, userCmdHandler, paramCmdHandler) {\n    this.specHandler = specHandler;\n    this.parameters = R.clone(specHandler.master_info.parameters);\n    this.userCmdHandler = userCmdHandler;\n    this.paramCmdHandler = paramCmdHandler;\n\n    // Initialize RxJS Subject for commands\n    this.commandSubject = new Subject();\n\n    // Setup command stream processing\n    this.setupCommandStream();\n\n    // Mapping command types to their handlers\n    this.commandHandlers = {\n      param_cmd: this.handleParamCmd.bind(this),\n      system_cmd: this.handleSystemCmd.bind(this),\n      user_cmd: this.handleUserCmd.bind(this),\n    };\n  }\n\n  /**\n   * Initializes the RxJS command stream with necessary operators.\n   */\n  setupCommandStream() {\n    this.commandSubject\n      .pipe(\n        switchMap(cmdMsg => this.processCommand(cmdMsg))\n      )\n      .subscribe({\n        next: () => {},\n        error: (err) => console.error('Error in command stream:', err),\n      });\n  }\n\n  /**\n   * Pushes a new command into the command stream.\n   * @param {Array} msg - The command message [cmd, type, param].\n   */\n  execute(msg) {\n    this.commandSubject.next(msg);\n  }\n\n  /**\n   * Processes a single command message.\n   * @param {Array} msg - The command message [cmd, type, param].\n   */\n  async processCommand(msg) {\n    if (!Array.isArray(msg) || msg.length < 3) {\n      throw new Error(\"Invalid message format. Expected [cmd, type, param].\");\n    }\n\n    const [cmd, type, param] = msg;\n\n    const handler = this.commandHandlers[type];\n    if (handler) {\n      await handler(cmd, param);\n    } else {\n      throw new Error(`Unknown command type '' in CommandHandler.execute`);\n    }\n  }\n\n  /**\n   * Handles parameter commands by updating the internal parameters.\n   * @param {string} cmd - The command name.\n   * @param {*} param - The parameter value.\n   */\n  handleParamCmd(cmd, param) {\n    const newParam = this.paramCmdHandler(cmd, this.parameters[cmd]);\n    this.parameters = R.assoc(cmd, newParam, this.parameters);\n    this._print(`Parameter '' updated to ''.`);\n  }\n\n  /**\n   * Handles system commands, such as displaying help messages.\n   * @param {string} cmd - The system command.\n   * @param {Array} param - The parameters for the system command.\n   */\n  handleSystemCmd(cmd, param) {\n    switch (cmd) {\n      case \"?\":\n        if (param.length === 0) {\n          this._print(this.specHandler.help_message);\n        } else {\n          this._displayCommandUsages(param);\n        }\n        break;\n      // Future system commands can be added here\n      default:\n        this._print(`Unhandled system command ''`);\n    }\n  }\n\n  /**\n   * Handles user commands by delegating to the user command handler.\n   * @param {string} cmd - The user command.\n   * @param {*} param - The parameter for the user command.\n   */\n  async handleUserCmd(cmd, param) {\n    try {\n      await this.userCmdHandler(cmd, param);\n      this._print(`User command '' executed successfully.`);\n    } catch (error) {\n      this._print(`Error executing user command '': ${error.message}`);\n    }\n  }\n\n  /**\n   * Displays the usage of specified commands.\n   * @param {Array} commands - Array of command names.\n   */\n  _displayCommandUsages(commands) {\n    let counter = 0;\n    commands.forEach((command) => {\n      const commandType = this.specHandler.commandType(command);\n      if (commandType !== undefined) {\n        counter += 1;\n        const usage = this.specHandler.commandUsage(command);\n        this._print(`()  usage:\\n`);\n      } else {\n        this._print(`Unknown command ''`);\n      }\n    });\n  }\n\n  /**\n   * Outputs a message to the console.\n   * @param {string} msg - The message to print.\n   */\n  _print(msg) {\n    console.log(msg);\n  }\n}\n\nmodule.exports = CommandHandler;\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### User command handler"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const userCmdHandlerSync = (cmd, param) => {\n  const sh = (cmd) => execSync(cmd, { encoding: 'utf-8' });\n  const print = (msg) => {\n    console.log(msg);\n  }\n\n  let c = param.reduce((acc,a)=>acc+' '+a,cmd);  \n  print(sh(c));\n};"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const user_cmd_handler = async (cmd, param) => {\n  /**\n   * Execute simple shell command (async wrapper).\n   * @param {String} cmd\n   * @return {Object} { stdout: String, stderr: String }\n   */\n  const sh = async (cmd) => {\n    return new Promise(function (resolve, reject) {\n      exec(cmd, (err, stdout, stderr) => {\n        if (err) {\n          reject(err);\n        } else {\n          resolve({ stdout, stderr });\n        }\n      });\n    });\n  };\n\n  const print = (msg) => {\n    console.log(msg);\n  };\n\n  let c = param.reduce((acc,a)=>acc+' '+a,cmd);\n  let { stdout } = await sh(c);\n  print(stdout);\n  /*\n  for (let line of stdout.split('\\n')) {\n    console.log(`${c}: ${line}`);\n  }\n  */\n};\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "#### chat-gpt modification\nThe following code adopted from chat-gpt refactoring of `user_cmd_handler`, only with variable names changed to c-like style. "
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const userCmdHandler = async (cmd, params) => {\n  /**\n   * Execute a shell command (async wrapper).\n   * @param {String} command\n   * @return {Promise<Object>} { stdout: String, stderr: String }\n   */\n  const shellCommand = (command) => {\n    return new Promise((resolve, reject) => {\n      exec(command, (error, stdout, stderr) => {\n        if (error) {\n          reject(error);\n        } else {\n          resolve({ stdout, stderr });\n        }\n      });\n    });\n  };\n\n  const printMessage = (message) => {\n    console.log(message);\n  };\n\n  const full_command = [cmd, ...params].join(' '); // Improved command building\n  const { stdout } = await shellCommand(full_command);\n  printMessage(stdout);\n  /*\n  stdout.split('\\n').forEach(line => { // More modern syntax for iterating\n    console.log(`${fullCommand}: ${line}`);\n  });\n  */\n};"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "#### gpt o1 modification\n\nLet's **refactor** the provided `user_cmd_handler` function to enhance its readability, maintainability, and adherence to modern JavaScript best practices. We'll focus on the following improvements:\n\n1. **Simplifying Asynchronous Operations**: Utilize `util.promisify` to convert `exec` into a promise-based function, eliminating the need to manually create a new `Promise`.\n2. **Streamlining Command Construction**: Use `Array.prototype.join` instead of `Array.prototype.reduce` for concatenating command parameters.\n3. **Removing Redundant Functions**: Eliminate the unnecessary `print` function and use `console.log` directly.\n4. **Enhanced Error Handling**: Implement comprehensive error handling to capture and log both `stdout` and `stderr`.\n5. **Code Modularization**: Break down the code into smaller, reusable functions for better testability and readability.\n6. **Optional Functional Programming Enhancements**: Incorporate **Ramda.js** for more declarative and functional approaches (if desired).\n\n\n##### **Refactored Code**: 1st iteration\n\nBelow is the refactored version of the `user_cmd_handler` function incorporating the improvements mentioned above:"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "import { promisify } from 'util';\n\n// Promisify the exec function for cleaner asynchronous usage\nconst execAsync = promisify(exec);\n\n/**\n * Executes a shell command asynchronously.\n * @param {string} cmd - The shell command to execute.\n * @returns {Promise<{ stdout: string, stderr: string }>} - The command output.\n * @throws {Error} - If the command execution fails.\n */\nconst executeShellCommand = async (cmd) => {\n  try {\n    const { stdout, stderr } = await execAsync(cmd);\n    return { stdout, stderr };\n  } catch (error) {\n    throw new Error(`Command execution failed: ${error.message}`);\n  }\n};\n\n/**\n * Handles user commands by executing shell commands.\n * @param {string} cmd - The base command.\n * @param {string[]} [params=[]] - The parameters for the command.\n */\nconst userCmdHandler = async (cmd, params = []) => {\n  // Construct the full command string by joining cmd and params with spaces\n  const fullCommand = R.join(' ', R.prepend(cmd, params));\n\n  try {\n    const { stdout, stderr } = await executeShellCommand(fullCommand);\n\n    // Log stdout if available\n    if (stdout.trim()) {\n      console.log(stdout);\n    }\n\n    // Log stderr as errors if available\n    if (stderr.trim()) {\n      console.error(`Error Output for \"\":\\n`);\n    }\n  } catch (error) {\n    // Log the error with context\n    console.error(`Failed to execute command \"\": ${error.message}`);\n  }\n};"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "##### **Refactoring Highlights**\n\n1. **Promisify `exec` with `util.promisify`**:\n   \n   Instead of manually wrapping `exec` in a `new Promise`, we use `promisify`, which converts callback-based functions to return promises. This simplifies asynchronous code and makes it more readable.\n\n   ```javascript\n   import { promisify } from 'util';\n   const execAsync = promisify(exec);\n   ```\n\n2. **Modularizing Command Execution**:\n   \n   We extract the shell command execution into a separate function `executeShellCommand`, which handles both execution and error handling.\n\n   ```javascript\n   const executeShellCommand = async (cmd) => {\n     try {\n       const { stdout, stderr } = await execAsync(cmd);\n       return { stdout, stderr };\n     } catch (error) {\n       throw new Error(`Command execution failed: ${error.message}`);\n     }\n   };\n   ```\n\n3. **Streamlining Command Construction**:\n   \n   Instead of using `reduce` to concatenate command parameters, we use `Array.prototype.join` combined with `Ramda.js`'s `prepend` function for a more declarative approach. If you prefer not to use Ramda, you can achieve the same with native JavaScript.\n\n   ```javascript\n   import * as R from 'ramda'; // Optional\n\n   const fullCommand = R.join(' ', R.prepend(cmd, params));\n   ```\n\n   **Without Ramda.js**:\n\n   ```javascript\n   const fullCommand = [cmd, ...params].join(' ');\n   ```\n\n4. **Eliminating Redundant `print` Function**:\n   \n   The original `print` function was a simple wrapper around `console.log`. In the refactored code, we use `console.log` and `console.error` directly for clarity.\n\n5. **Comprehensive Error Handling**:\n   \n   Both standard output (`stdout`) and standard error (`stderr`) are handled appropriately. Errors during command execution are caught, and informative messages are logged.\n\n6. **Optional Functional Programming Enhancements**:\n   \n   Incorporating **Ramda.js** allows for more functional and declarative code. However, it's optional and can be replaced with native JavaScript if desired.\n\n   ```javascript\n   import * as R from 'ramda';\n   const fullCommand = R.join(' ', R.prepend(cmd, params));\n   ```\n\n7. **Exporting the Handler Appropriately**:\n   \n   The refactored function is exported as the default export, making it easy to import and use in other parts of your application.\n\n   ```javascript\n   export default userCmdHandler;\n   ```\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "##### **Usage Example**\n\nHere's how you can use the refactored `userCmdHandler` in your application:"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const run = async () => {\n  try {\n    // Example command: List directory contents\n    await userCmdHandler('ls', ['-la']);\n\n    // Example command: Echo a message\n    await userCmdHandler('echo', ['Hello, World!']);\n\n    // Example command with no parameters\n    await userCmdHandler('pwd');\n\n    // Example command that results in error\n    await userCmdHandler('invalid_command', []);\n  } catch (error) {\n    console.error('An unexpected error occurred:', error.message);\n  }\n};\n\nrun();"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "total 676",
+                                "drwxr-xr-x   9 zzhang zzhang   4096 Oct  3 11:12 .",
+                                "drwxr-xr-x   1 zzhang zzhang   4096 Oct  3 08:26 ..",
+                                "drwxr-xr-x   2 zzhang zzhang   4096 Sep 29 13:18 .vscode",
+                                "-rw-r--r--   1 zzhang zzhang 315772 Sep 29 23:00 4.jpg",
+                                "drwxr-xr-x   3 zzhang zzhang   4096 Sep  8 01:41 charts",
+                                "-rw-r--r--   1 zzhang zzhang   5906 Oct  2 14:40 chat_2024_10_02_14_36_25.md",
+                                "-rw-r--r--   1 zzhang zzhang   3322 Oct  2 14:40 chat_2024_10_02_14_40_51.md",
+                                "-rw-r--r--   1 zzhang zzhang   3516 Oct  2 14:41 chat_2024_10_02_14_41_02.md",
+                                "-rw-r--r--   1 zzhang zzhang   3921 Oct  2 15:27 chat_2024_10_02_15_27_18.md",
+                                "-rw-r--r--   1 zzhang zzhang   3799 Oct  2 15:30 chat_2024_10_02_15_30_16.md",
+                                "-rw-r--r--   1 zzhang zzhang   7673 Oct  2 06:23 command_line.nnb",
+                                "drwxr-xr-x   5 zzhang zzhang   4096 Sep 22 09:27 data_sources",
+                                "drwxr-xr-x   5 zzhang zzhang   4096 Oct  3 12:04 docs",
+                                "drwxr-xr-x   3 zzhang zzhang   4096 Sep 28 00:26 examples",
+                                "-rw-r--r--   1 zzhang zzhang   1392 Sep 25 12:29 haskell_like.js",
+                                "-rw-r--r--   1 zzhang zzhang    805 Sep 29 22:59 index.html",
+                                "-rw-r--r--   1 zzhang zzhang    702 Sep 29 22:59 index.js",
+                                "-rw-r--r--   1 zzhang zzhang  66083 Oct  2 20:45 making_cli.nnb",
+                                "drwxr-xr-x   2 zzhang zzhang   4096 Oct  2 15:50 modules",
+                                "drwxr-xr-x 272 zzhang zzhang   8192 Oct  3 08:26 node_modules",
+                                "-rw-r--r--   1 zzhang zzhang  11571 Sep 25 11:57 note.md",
+                                "-rw-r--r--   1 zzhang zzhang 149701 Oct  3 08:26 package-lock.json",
+                                "-rw-r--r--   1 zzhang zzhang    872 Oct  3 08:26 package.json",
+                                "-rw-r--r--   1 zzhang zzhang   1074 Sep 29 15:59 script.js",
+                                "-rw-r--r--   1 zzhang zzhang   4089 Sep 30 05:37 spec.md",
+                                "-rw-r--r--   1 zzhang zzhang    100 Sep 29 23:00 style.css",
+                                "-rw-r--r--   1 zzhang zzhang   4252 Sep 27 07:31 test.js",
+                                "-rw-r--r--   1 zzhang zzhang   2594 Oct  2 15:49 test.json",
+                                "-rw-r--r--   1 zzhang zzhang      0 Sep 30 06:23 test.nb",
+                                "-rw-r--r--   1 zzhang zzhang    166 Sep 30 06:24 test.nnb",
+                                "-rw-r--r--   1 zzhang zzhang    867 Oct  2 22:58 test_chalk.js",
+                                "-rw-r--r--   1 zzhang zzhang    267 Oct  1 05:56 test_cmd_line.js",
+                                "-rw-r--r--   1 zzhang zzhang   3697 Oct  1 05:02 test_spec_schema.js",
+                                "-rw-r--r--   1 zzhang zzhang    187 Sep 23 22:32 usages.md",
+                                "",
+                                "/home/zzhang/dev",
+                                "",
+                                ""
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stderr",
+                            "value": [
+                                "Failed to execute command \"\": Command execution failed: Command failed: invalid_command",
+                                "/bin/sh: 1: invalid_command: not found",
+                                "",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "##### **Additional Enhancements: 2nd iteration**\n\n1. **TypeScript Integration**:\n   \n   For improved type safety and developer experience, consider implementing the handler in TypeScript."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "// user_cmd_handler.ts\n\nimport { exec } from 'child_process';\nimport { promisify } from 'util';\nimport * as R from 'ramda';\n\nconst execAsync = promisify(exec);\n\n/**\n * Executes a shell command asynchronously.\n * @param cmd - The shell command to execute.\n * @returns A promise that resolves with the command output.\n * @throws Will throw an error if the command execution fails.\n */\nconst executeShellCommand = async (cmd: string): Promise<{ stdout: string; stderr: string }> => {\n  try {\n    const { stdout, stderr } = await execAsync(cmd);\n    return { stdout, stderr };\n  } catch (error: any) {\n    throw new Error(`Command execution failed: ${error.message}`);\n  }\n};\n\n/**\n * Handles user commands by executing shell commands.\n * @param cmd - The base command.\n * @param params - The parameters for the command.\n */\nconst userCmdHandler = async (cmd: string, params: string[] = []): Promise<void> => {\n  const fullCommand = R.join(' ', R.prepend(cmd, params));\n\n  try {\n    const { stdout, stderr } = await executeShellCommand(fullCommand);\n\n    if (stdout.trim()) {\n      console.log(stdout);\n    }\n\n    if (stderr.trim()) {\n      console.error(`Error Output for \"\":\\n`);\n    }\n  } catch (error: any) {\n    console.error(`Failed to execute command \"\": ${error.message}`);\n  }\n};\n\n// export default userCmdHandler;\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "2. **Input Validation**:\n\n   Enhance the handler to validate inputs more rigorously, ensuring that commands and parameters are safe to execute.\n\n   ```javascript\n   /**\n    * Validates the command and parameters to prevent injection attacks.\n    * @param cmd - The command to validate.\n    * @param params - The parameters to validate.\n    * @returns {boolean} - True if valid, else false.\n    */\n   const validateCommand = (cmd, params) => {\n     const allowedCommands = [\"ls\", \"echo\", \"pwd\"]; // Define allowed commands\n     if (!allowedCommands.includes(cmd)) {\n       console.error(`Invalid command \"${cmd}\"`);\n       return false;\n     }\n     // Add more validation as needed\n     return true;\n   };\n\n   const userCmdHandler = async (cmd, params = []) => {\n     if (!validateCommand(cmd, params)) return;\n     // Rest of the handler...\n   };\n   ```\n\n3. **Logging Enhancements**:\n\n   Integrate a logging library like **Winston** or **Bunyan** for more sophisticated logging capabilities.\n\n   ```javascript\n   import { createLogger, transports, format } from 'winston';\n\n   const logger = createLogger({\n     level: 'info',\n     format: format.combine(\n       format.timestamp(),\n       format.printf(({ timestamp, level, message }) => {\n         return `${timestamp} [${level.toUpperCase()}]: ${message}`;\n       })\n     ),\n     transports: [\n       new transports.Console(),\n       // Add file transports if needed\n     ],\n   });\n\n   // Replace console.log and console.error with logger.info and logger.error\n   const userCmdHandler = async (cmd, params = []) => {\n     // ...\n     if (stdout.trim()) {\n       logger.info(stdout);\n     }\n\n     if (stderr.trim()) {\n       logger.error(`Error Output for \"${fullCommand}\":\\n${stderr}`);\n     }\n     // ...\n     } catch (error: any) {\n       logger.error(`Failed to execute command \"${fullCommand}\": ${error.message}`);\n     }\n   };\n   ```\n\n4. **Security Considerations**:\n\n   Executing shell commands based on user input can be risky. Ensure that commands are sanitized and only allowed commands are executed to prevent security vulnerabilities.\n\n   ```javascript\n   const allowedCommands = [\"ls\", \"echo\", \"pwd\"]; // Define a whitelist of allowed commands\n\n   const validateCommand = (cmd, params) => {\n     if (!allowedCommands.includes(cmd)) {\n       logger.error(`Attempted to execute disallowed command: \"${cmd}\"`);\n       return false;\n     }\n     // Additional sanitization if necessary\n     return true;\n   };\n   ```\n\n##### **Final Refactored Code with Enhancements**\n\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "import { exec } from \"child_process\";\nimport { promisify } from \"util\";\nimport * as R from \"ramda\";\nimport { createLogger, transports, format } from \"winston\";\n\n// Promisify exec for cleaner async/await usage\nconst execAsync = promisify(exec);\n\n// Initialize Winston logger\nconst logger = createLogger({\n  level: \"info\",\n  format: format.combine(\n    format.timestamp(),\n    format.printf(({ timestamp, level, message }) => {\n      return `${timestamp} [${level.toUpperCase()}]: ${message}`;\n    })\n  ),\n  transports: [\n    new transports.Console(),\n    // Add file transports if needed\n  ],\n});\n\n// Define allowed commands for security\nconst allowedCommands = [\"ls\", \"echo\", \"pwd\"]; // Extend this list as necessary\n\n/**\n * Validates the command and its parameters.\n * @param {string} cmd - The base command.\n * @param {string[]} params - The command parameters.\n * @returns {boolean} - True if valid, else false.\n */\nconst validateCommand = (cmd, params) => {\n  if (!allowedCommands.includes(cmd)) {\n    logger.error(`Invalid or disallowed command \"${cmd}\" attempted.`);\n    return false;\n  }\n  // Add more validation rules as needed (e.g., sanitize params)\n  return true;\n};\n\n/**\n * Executes a shell command asynchronously.\n * @param {string} cmd - The full shell command to execute.\n * @returns {Promise<{ stdout: string, stderr: string }>} - The command outputs.\n * @throws {Error} - If command execution fails.\n */\nconst executeShellCommand = async (cmd) => {\n  try {\n    const { stdout, stderr } = await execAsync(cmd);\n    return { stdout, stderr };\n  } catch (error) {\n    throw new Error(`Command execution failed: ${error.message}`);\n  }\n};\n\n/**\n * Handles user commands by executing shell commands.\n * @param {string} cmd - The base command.\n * @param {string[]} [params=[]] - The parameters for the command.\n */\nconst userCmdHandler = async (cmd, params = []) => {\n  if (!validateCommand(cmd, params)) return;\n\n  // Construct the full command string\n  const fullCommand = R.join(\" \", R.prepend(cmd, params)); // e.g., 'ls -la'\n\n  try {\n    const { stdout, stderr } = await executeShellCommand(fullCommand);\n\n    // Log stdout if available\n    if (stdout.trim()) {\n      logger.info(`Output of \"${fullCommand}\":\\n${stdout}`);\n    }\n\n    // Log stderr if available\n    if (stderr.trim()) {\n      logger.error(`Error Output for \"${fullCommand}\":\\n${stderr}`);\n    }\n  } catch (error) {\n    logger.error(\n      `Failed to execute command \"${fullCommand}\": ${error.message}`\n    );\n  }\n};\n\n//export default userCmdHandler;"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "##### **Key Improvements Explained**\n\n1. **Promisified `exec`**:\n   \n   Leveraging `util.promisify` simplifies the asynchronous execution of shell commands, removing the need for manually creating a `Promise`.\n\n   ```javascript\n   const execAsync = promisify(exec);\n   ```\n\n2. **Winston Logger Integration**:\n   \n   Instead of using `console.log` and `console.error`, integrating **Winston** provides more control over logging levels, formats, and transports.\n\n   ```javascript\n   import { createLogger, transports, format } from 'winston';\n\n   const logger = createLogger({\n     level: 'info',\n     format: format.combine(\n       format.timestamp(),\n       format.printf(({ timestamp, level, message }) => {\n         return `${timestamp} [${level.toUpperCase()}]: ${message}`;\n       })\n     ),\n     transports: [\n       new transports.Console(),\n       // Add file transports if needed\n     ],\n   });\n   ```\n\n3. **Command Validation for Security**:\n   \n   To prevent the execution of potentially harmful commands, a whitelist (`allowedCommands`) is maintained. This approach mitigates security risks like command injection.\n\n   ```javascript\n   const allowedCommands = ['ls', 'echo', 'pwd']; // Extend as necessary\n\n   const validateCommand = (cmd, params) => {\n     if (!allowedCommands.includes(cmd)) {\n       logger.error(`Invalid or disallowed command \"${cmd}\" attempted.`);\n       return false;\n     }\n     // Add more validation if needed\n     return true;\n   };\n   ```\n\n4. **Streamlined Command Construction**:\n   \n   Using `Array.prototype.join` combined with `Ramda.js`'s `prepend` function creates the full command string in a clear and concise manner.\n\n   ```javascript\n   const fullCommand = R.join(' ', R.prepend(cmd, params)); // e.g., 'ls -la'\n   ```\n\n   **Without Ramda.js**:\n\n   ```javascript\n   const fullCommand = [cmd, ...params].join(' ');\n   ```\n\n5. **Comprehensive Error Handling**:\n   \n   Errors during command execution are caught and logged with contextual information, aiding in debugging and monitoring.\n\n   ```javascript\n   catch (error) {\n     logger.error(`Failed to execute command \"${fullCommand}\": ${error.message}`);\n   }\n   ```\n\n6. **Descriptive Logging**:\n   \n   Both `stdout` and `stderr` outputs are logged separately with clear messages, providing better insight into command executions.\n\n   ```javascript\n   if (stdout.trim()) {\n     logger.info(`Output of \"${fullCommand}\":\\n${stdout}`);\n   }\n\n   if (stderr.trim()) {\n     logger.error(`Error Output for \"${fullCommand}\":\\n${stderr}`);\n   }\n   ```\n\n7. **Optional Functional Programming with Ramda.js**:\n   \n   Utilizing Ramda.js enhances code readability and promotes a declarative style. However, if you prefer not to use Ramda, the same functionality can be achieved with native JavaScript.\n\n   ```javascript\n   import * as R from 'ramda';\n   const fullCommand = R.join(' ', R.prepend(cmd, params));\n   ```\n\n   **Without Ramda.js**:\n\n   ```javascript\n   const fullCommand = [cmd, ...params].join(' ');\n   ```\n\n8. **Exporting the Handler Properly**:\n   \n   The handler is exported as the default export, allowing for straightforward imports elsewhere in your application.\n\n   ```javascript\n   export default userCmdHandler;\n   ```\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "##### **Usage Example**\n\nHere's how you can utilize the refactored `user_cmd_handler` in your application:"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "// main.js\n\n//import userCmdHandler from './user_cmd_handler';\n\nconst run = async () => {\n  try {\n    // Example command: List directory contents\n    await userCmdHandler('ls', ['modules -la']);\n\n    // Example command: Echo a message\n    await userCmdHandler('echo', ['Hello, World!']);\n\n    // Example command with no parameters\n    await userCmdHandler('pwd');\n\n    // Example command that results in error (if 'invalid_command' is not in allowedCommands)\n    //await userCmdHandler('invalid_command', []);\n  } catch (error) {\n    console.error('An unexpected error occurred:', error.message);\n  }\n};\n\nrun();\n"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "2024-10-03T16:17:46.935Z [INFO]: Output of \"ls modules -la\":",
+                                "total 28",
+                                "drwxr-xr-x  2 zzhang zzhang 4096 Oct  2 15:50 .",
+                                "drwxr-xr-x 10 zzhang zzhang 4096 Oct  3 15:47 ..",
+                                "-rw-r--r--  1 zzhang zzhang 5399 Sep 30 05:37 cli.js",
+                                "-rw-r--r--  1 zzhang zzhang 3561 Oct  2 15:50 cli_spec_schema.cjs",
+                                "-rw-r--r--  1 zzhang zzhang 3525 Oct  2 15:41 cli_spec_schema.js",
+                                "-rw-r--r--  1 zzhang zzhang 2571 Oct  3 11:12 utils.js",
+                                "",
+                                "2024-10-03T16:17:46.943Z [INFO]: Output of \"pwd\":",
+                                "/home/zzhang/dev",
+                                "",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### **Testing the Refactored Handler**\n\nTo ensure that the refactored handler works as expected, you can write unit tests using a testing framework like **Jest** or **Mocha**. Here's a simple example using Jest:\n\n1. **Install Jest**:\n\n   ```bash\n   npm install --save-dev jest\n   ```\n\n2. **Configure Jest** in your `package.json`:\n\n   ```json\n   {\n     \"scripts\": {\n       \"test\": \"jest\"\n     }\n   }\n   ```\n\n3. **Create a Test File**: `user_cmd_handler.test.js`\n\n   ```javascript\n   // user_cmd_handler.test.js\n\n   import userCmdHandler from './user_cmd_handler';\n   import { exec } from 'child_process';\n   import { promisify } from 'util';\n\n   // Mock exec\n   jest.mock('child_process', () => ({\n     exec: jest.fn(),\n   }));\n\n   const execAsync = promisify(exec);\n\n   describe('userCmdHandler', () => {\n     beforeEach(() => {\n       jest.clearAllMocks();\n     });\n\n     it('should execute a valid command', async () => {\n       const mockStdout = 'Directory contents';\n       exec.mockImplementation((cmd, callback) => {\n         callback(null, mockStdout, '');\n       });\n\n       console.log = jest.fn();\n       await userCmdHandler('echo', ['test']);\n\n       expect(exec).toHaveBeenCalledWith('echo test', expect.any(Function));\n       expect(console.log).toHaveBeenCalledWith(mockStdout);\n     });\n\n     it('should handle command errors gracefully', async () => {\n       const mockError = new Error('Command failed');\n       const mockStderr = 'Error message';\n       exec.mockImplementation((cmd, callback) => {\n         callback(mockError, '', mockStderr);\n       });\n\n       console.error = jest.fn();\n       await userCmdHandler('invalid_command', []);\n\n       expect(exec).toHaveBeenCalledWith('invalid_command', expect.any(Function));\n       expect(console.error).toHaveBeenCalledWith(`Invalid or disallowed command \"invalid_command\" attempted.`);\n     });\n   });\n   ```\n\n4. **Run Tests**:\n\n   ```bash\n   npm test\n   ```\n\n### **Conclusion**\n\nThe refactored `user_cmd_handler` function is now more robust, secure, and maintainable. By leveraging `util.promisify`, we simplified asynchronous shell command execution. Incorporating **Winston** for logging provides better control and structure to log outputs, while validating commands ensures security by preventing the execution of unauthorized commands. Additionally, adopting **Ramda.js** enhances the functional programming aspect of the code, making it more declarative and expressive.\n\nFeel free to further customize and enhance the handler based on your application's specific requirements, such as integrating more complex command validations, expanding the list of allowed commands, or implementing additional logging transports."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "### param command handler"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const paramCmdHandler = (cmd,parameters) => {\n  console.log(`${cmd} with parameters ${JSON.stringify(parameters,null,2)}`);\n  parameters.source='url';\n  return parameters;\n};"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const command_handler = new CommandHandler(spec_handler,userCmdHandler,paramCmdHandler);"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "command_handler.specHandler.commandUsage('ls')"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[32m'list of files'\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const help_line = \"? table_op ? ls\";\nconst msg = commandLineProcessor(help_line,spec_handler);\ncommand_handler.execute(msg)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "(1) table_op:",
+                                " table_op [run|set|ls] [args]",
+                                " args:",
+                                "   -s, --source: the valid values are 'file', 'table' or 'url'",
+                                "   -t, --target: target must be 'file' or 'table'",
+                                "   -a, --action: the valid actions are 'create', 'find_or_create' or 'update'",
+                                "   -m, --model: model name must be a valid model in the sequelize",
+                                "  if args not specified, the last set value will be used, if an arg has never been set, then the default value will be used.",
+                                "(2) ?:",
+                                " ?: help information",
+                                "(3) ls:",
+                                " list of files",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const param_line = \"param table_op query\"\nconst msg = commandLineProcessor(param_line,spec_handler);\ncommand_handler.execute(msg)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "(1) table_op:",
+                                " {",
+                                "  \"source\": \"file\",",
+                                "  \"target\": \"table\",",
+                                "  \"action\": \"create\",",
+                                "  \"model\": \"coin_list\"",
+                                "}",
+                                "(2) query:",
+                                " {",
+                                "  \"model\": \"coin_list\"",
+                                "}",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "try {\nconst ls_line = \"ls modules -la\"\nconst msg = commandLineProcessor(ls_line,spec_handler);\ncommand_handler.execute(msg);\n} catch (error) {\n  console.log(error);\n}"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "total 28",
+                                "drwxr-xr-x 2 zzhang zzhang 4096 Oct  2 15:50 .",
+                                "drwxr-xr-x 9 zzhang zzhang 4096 Oct  3 11:12 ..",
+                                "-rw-r--r-- 1 zzhang zzhang 5399 Sep 30 05:37 cli.js",
+                                "-rw-r--r-- 1 zzhang zzhang 3561 Oct  2 15:50 cli_spec_schema.cjs",
+                                "-rw-r--r-- 1 zzhang zzhang 3525 Oct  2 15:41 cli_spec_schema.js",
+                                "-rw-r--r-- 1 zzhang zzhang 2571 Oct  3 11:12 utils.js",
+                                "",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "try {\n  const ls_line = \"table_op run\";\n  const msg = commandLineProcessor(ls_line, spec_handler);\n  command_handler.execute(msg);\n} catch (error) {\n  console.log(error);\n}\n"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "table_op with parameters {",
+                                "  \"source\": \"file\",",
+                                "  \"target\": \"table\",",
+                                "  \"action\": \"create\",",
+                                "  \"model\": \"coin_list\"",
+                                "}",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "<div class=\"alert alert-block alert-info\">\n<strong>Note:</strong> <mark>parameters</mark> <em>changed</em> in <mark>CommandHandler</mark> <em>are not affecting</em> those in <mark>SpecHandler</mark>.\nSo the <mark>SpecHandler</mark> is always holding the original default setting.\n</div>"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "spec_handler.master_info.parameters.table_op"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  source: \u001b[32m'file'\u001b[39m,",
+                                "  target: \u001b[32m'table'\u001b[39m,",
+                                "  action: \u001b[32m'create'\u001b[39m,",
+                                "  model: \u001b[32m'coin_list'\u001b[39m",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "command_handler.parameters"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "{",
+                                "  table_op: {",
+                                "    source: \u001b[32m'url'\u001b[39m,",
+                                "    target: \u001b[32m'table'\u001b[39m,",
+                                "    action: \u001b[32m'create'\u001b[39m,",
+                                "    model: \u001b[32m'coin_list'\u001b[39m",
+                                "  },",
+                                "  query: {",
+                                "    model: \u001b[32m'coin_list'\u001b[39m",
+                                "  }",
+                                "}"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "amazing math symbol: $\\color{orange}\\sigma$"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## CLI"
+            ],
+            "outputs": []
+        }
+    ]
+}

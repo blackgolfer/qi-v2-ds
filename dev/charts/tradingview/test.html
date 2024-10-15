@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Details</title>
+    <link rel="stylesheet" href="assets/css/widgets/layout.css" />
+    <script type="text/javascript" src="assets/scripts/layout.js"></script>
+  </head>
+  <body onresize="ResetColumnSizes()">
+    <div id="page" onmouseup="EndDrag()" onmousemove="OnDrag(event)">
+      <div id="header">Header</div>
+      <div id="leftcol">Left Col</div>
+      <div id="leftdragbar" onmousedown="StartLeftDrag()"></div>
+      <div id="tabs">Tabs</div>
+      <div id="tabpages">Tab Pages</div>
+      <div id="rightdragbar" onmousedown="StartRightDrag()"></div>
+      <div id="rightcol">Rightcol</div>
+      <div id="footer">Footer</div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>TradingView Advanced Charts example</title>
+
+        <!-- The script that loads the library -->
+        <script
+            type="text/javascript"
+            src="lib/charting_library/charting_library.js">
+        </script>
+
+        <!-- The script for CryptoCompare WebSocket -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
+
+        <!-- Custom datafeed module -->
+        <script type="module" src="src/sources/cryptocompare/main.js"></script>
+        <script type="module" src="src/sources/cryptocompare/ma.js"></script>
+    </head>
+
+    <body style="margin:0px;">
+        <!-- A container for the the library widget -->
+        <div id="tv_chart_container">
+        </div>
+    </body>
+</html>
